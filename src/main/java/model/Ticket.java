@@ -1,5 +1,6 @@
 package model;
 
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 import retrievers.VersionRetriever;
 
@@ -16,6 +17,7 @@ public class Ticket {
     private VersionInfo injectedRelease;
     private VersionInfo fixedRelease;
     private VersionRetriever versionRetriever;
+    private ArrayList<RevCommit> associatedCommit;
 
     public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, ArrayList<VersionInfo> affectedRelease, @NotNull VersionRetriever versionRetriever){
 
@@ -106,4 +108,11 @@ public class Ticket {
         this.affectedRelease = affectedVersions;
     }
 
+    public ArrayList<RevCommit> getAssociatedCommit() {
+        return associatedCommit;
+    }
+
+    public void setAssociatedCommit(ArrayList<RevCommit> associatedCommit) {
+        this.associatedCommit = associatedCommit;
+    }
 }

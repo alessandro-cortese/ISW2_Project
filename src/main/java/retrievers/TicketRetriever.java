@@ -9,6 +9,7 @@ import utils.JSONUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import utils.Proportion;
+import utils.TicketUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -17,12 +18,17 @@ import java.util.ArrayList;
 public class TicketRetriever {
 
     private VersionRetriever versionRetriever;
+    private ArrayList<Ticket> tickets;
+
 
     public TicketRetriever(String projectName, String issueType, String state, String resolution) {
+
         try {
+
             versionRetriever = new VersionRetriever(projectName);
-            ArrayList<Ticket> tickets = retrieveBugTickets(projectName, issueType, state, resolution);
-            //TicketUtils.printTickets(tickets);
+            TicketUtils.printTickets(tickets);
+            tickets = retrieveBugTickets(projectName, issueType, state, resolution);
+
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -41,6 +47,7 @@ public class TicketRetriever {
                     + projectName + "%22AND%22issueType%22=%22" + issueType + "%22AND(%22status%22=%22" + state + "%22OR"
                     + "%22status%22=%22resolved%22)AND%22resolution%22=%22" + resolution + "%22&fields=key,resolutiondate,versions,created&startAt="
                     + i + "&maxResults=" + j;
+            System.out.println(url);
             JSONObject json = JSONUtils.getJsonFromUrl(url);
             JSONArray issues = json.getJSONArray("issues");
             total = json.getInt("total");
@@ -51,7 +58,6 @@ public class TicketRetriever {
                 String creationDate = issues.getJSONObject(i%1000).getJSONObject("fields").get("created").toString();
                 ArrayList<VersionInfo> releases = versionRetriever.getAffectedVersion(issues.getJSONObject(i%1000).getJSONObject("fields").getJSONArray("versions"));
                 Ticket ticket = new Ticket(creationDate, resolutionDate, key, releases, versionRetriever);
-                //TODO if a ticket does not have a new release after its created date
                 if(!setReleaseInfoInTicket(ticket))
                     continue;
                 addTicket(ticket, consistentTickets, inconsistentTickets);
@@ -147,4 +153,14 @@ public class TicketRetriever {
     public void setVersionRetriever(VersionRetriever versionRetriever) {
         this.versionRetriever = versionRetriever;
     }
+
+
+    public ArrayList<Ticket> getTickets(){
+        return this.tickets;
+    }
+
+    public void setTickets(ArrayList<Ticket> tickets){
+        this.tickets = tickets;
+    }
+
 }
