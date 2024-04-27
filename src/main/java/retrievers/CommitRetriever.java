@@ -1,40 +1,65 @@
 package retrievers;
 
-import model.*;
+import model.Ticket;
+import org.eclipse.jgit.annotations.Nullable;
 import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffFormatter;
-import org.eclipse.jgit.diff.Edit;
-import org.eclipse.jgit.diff.RawTextComparator;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.jetbrains.annotations.NotNull;
 import utils.GitUtils;
-import utils.JavaClassUtil;
-import utils.RegularExpression;
-import utils.VersionUtil;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
 
 public class CommitRetriever {
 
-    private final Git git;
-    private final Repository repo;
-    private final VersionRetriever versionRetriever;
-    private List<RevCommit> commitList;
+    private Git git;
+    private Repository repository;
 
-    public CommitRetriever(String repositoryPath, VersionRetriever versionRetriever) throws IOException {
-        this.repo = GitUtils.getRepository(repositoryPath);
-        this.git = new Git(repo);
-        this.versionRetriever = versionRetriever;
+    public CommitRetriever(String repositoryPath) {
+        this.repository = GitUtils.getRepository(repositoryPath);
+        this.git = new Git(repository);
     }
+
+    /*public void retrieveReleaseInfoForTickets(ArrayList<Ticket> tickets) {
+        try {
+            Iterable<RevCommit> commitIterable = git.log().call();
+            ArrayList<RevCommit> commits = new ArrayList<>();
+            for(RevCommit commit: commitIterable) {
+                commits.add(commit);
+            }
+            for(Ticket ticket: tickets) {
+                //TODO take the right commit? Date OpeningVersion > Date FixVersion
+                RevCommit commit = retrieveCommit(commits, ticket);
+                if(commit != null) setReleaseInfoInTicket(commit, ticket);
+            }
+        } catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
+    }*/
+
+    private @Nullable RevCommit retrieveCommit(@NotNull ArrayList<RevCommit> commits, Ticket ticket) {
+        for (RevCommit commit : commits) {
+            if (commit.getFullMessage().contains(ticket.getKey())) {
+                return commit;
+            }
+        }
+        return null;
+    }
+
+    public Git getGit() {
+        return this.git;
+    }
+
+    public void setGit(Git git) {
+        this.git = git;
+    }
+
+    public Repository getRepository() {
+        return this.repository;
+    }
+
+    public void setRepository(Repository repository){
+        this.repository = repository;
+    }
+
 }
