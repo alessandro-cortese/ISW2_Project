@@ -18,7 +18,7 @@ public class VersionRetriever {
 
     private ArrayList<VersionInfo> projectVersions;
 
-    private static final String URL = "https://issue.apache.org/jira/rest/api/2/project/";
+    private static final String URL = "https://issues.apache.org/jira/rest/api/2/project/";
     private static final String VERSIONS = "versions";
     private static final String RELEASE_DATE = "releaseDate";
     private static final String ID = "id";
@@ -37,7 +37,8 @@ public class VersionRetriever {
 
         String projectUrl = URL + projectName;
         JSONObject jsonObject = JSONUtils.getJsonFromUrl(projectUrl);
-        JSONArray jsonArrayVersion = JSONUtils.getJsonArrayFromURL(VERSIONS);
+        JSONArray jsonArrayVersion = jsonObject.getJSONArray(VERSIONS);
+
         this.projectVersions = createVersionArray(jsonArrayVersion);
 
         this.projectVersions.sort(Comparator.comparing(VersionInfo::getDate));
@@ -52,13 +53,13 @@ public class VersionRetriever {
         for(int i = 0; i < jsonArrayVersion.length(); i++){
             String name = "";
             String id = "";
-            if(jsonArrayVersion.getJSONObject(1).has(RELEASE_DATE)){
+            if(jsonArrayVersion.getJSONObject(i).has(RELEASE_DATE)){
 
-                if(jsonArrayVersion.getJSONObject(1).has(NAME))
-                    name = jsonArrayVersion.getJSONObject(1).get(NAME).toString();
-                if(jsonArrayVersion.getJSONObject(1).has(ID))
-                    id = jsonArrayVersion.getJSONObject(1).get(ID).toString();
-                addRelease(jsonArrayVersion.getJSONObject(1).get(RELEASE_DATE).toString(), name, id, versionInfoArrayList);
+                if(jsonArrayVersion.getJSONObject(i).has(NAME))
+                    name = jsonArrayVersion.getJSONObject(i).get(NAME).toString();
+                if(jsonArrayVersion.getJSONObject(i).has(ID))
+                    id = jsonArrayVersion.getJSONObject(i).get(ID).toString();
+                addRelease(jsonArrayVersion.getJSONObject(i).get(RELEASE_DATE).toString(), name, id, versionInfoArrayList);
 
             }
         }
@@ -67,13 +68,11 @@ public class VersionRetriever {
     }
 
     private void addRelease(String date, String name, String id, ArrayList<VersionInfo> versionInfoArrayList) {
-
         LocalDate localDate = LocalDate.parse(date);
         VersionInfo newReleaseInfo = new VersionInfo(id, name, localDate);
         versionInfoArrayList.add(newReleaseInfo);
 
     }
-
     private void setIndex(ArrayList<VersionInfo> projectVersions) {
 
         int index = 0;
@@ -90,12 +89,11 @@ public class VersionRetriever {
         ArrayList<VersionInfo> affectedVersions = new ArrayList<>();
 
         for(int i = 0; i < versions.length(); i++){
-            if(versions.getJSONObject(1).has(RELEASE_DATE)){
-                if(versions.getJSONObject(1).has(ID)){
-                    id = versions.getJSONObject(1).get(ID).toString();
+            if(versions.getJSONObject(i).has(RELEASE_DATE)){
+                if(versions.getJSONObject(i).has(ID)){
+                    id = versions.getJSONObject(i).get(ID).toString();
                     VersionInfo version = searchVersion(id);
-                    if(version == null)
-                        throw new RuntimeException();
+                    if(version == null) throw new RuntimeException();
                     affectedVersions.add(version);
                 }
 
@@ -114,7 +112,6 @@ public class VersionRetriever {
             }
         }
         return null;
-
     }
 
     public ArrayList<VersionInfo> getProjectVersions(){

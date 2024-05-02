@@ -26,7 +26,6 @@ public class TicketRetriever {
         try {
 
             versionRetriever = new VersionRetriever(projectName);
-            TicketUtils.printTickets(tickets);
             tickets = retrieveBugTickets(projectName, issueType, state, resolution);
 
         } catch (IOException e) {
@@ -47,7 +46,6 @@ public class TicketRetriever {
                     + projectName + "%22AND%22issueType%22=%22" + issueType + "%22AND(%22status%22=%22" + state + "%22OR"
                     + "%22status%22=%22resolved%22)AND%22resolution%22=%22" + resolution + "%22&fields=key,resolutiondate,versions,created&startAt="
                     + i + "&maxResults=" + j;
-            System.out.println(url);
             JSONObject json = JSONUtils.getJsonFromUrl(url);
             JSONArray issues = json.getJSONArray("issues");
             total = json.getInt("total");
