@@ -5,22 +5,19 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
 import retrievers.CommitRetriever;
 import retrievers.TicketRetriever;
-import retrievers.VersionRetriever;
-
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) throws IOException {
 
+        String issueType = "Bug";
+        String state = "closed";
+        String resolution = "fixed";
         String bookkeeper = "BOOKKEEPER";
         String BOOKKEEPER_PATH = "/home/ales/Documents/GitHub/bookkeeper";
         String zookeeper = "ZOOKEEPER";
         String ZOOKEEPER_PATH = "/home/ales/Documents/GitHub/zookeeper";
-        String issueType = "Bug";
-        String state = "closed";
-        String resolution = "fixed";
 
 
         CommitRetriever bookkeeperCommitRetriever = new CommitRetriever(BOOKKEEPER_PATH);
@@ -33,17 +30,17 @@ public class Main {
 
     }
 
-    private static void associatedTicketAndCommit(CommitRetriever commitRetriever, ArrayList<Ticket> projectTickets){
-
-        try{
-            for(Ticket ticket: projectTickets){
-                ArrayList<RevCommit> commits = commitRetriever.retrieveCommit(ticket);
-                ticket.setAssociatedCommit(commits);
-            }
-        }catch (GitAPIException e){
-            throw new RuntimeException(e);
-        }
-
-    }
+//    private static void associatedTicketAndCommit(CommitRetriever commitRetriever, ArrayList<Ticket> projectTickets){
+//
+//        try{
+//            for(Ticket ticket: projectTickets){
+//                ArrayList<RevCommit> commits = commitRetriever.retrieveCommit(ticket);
+//                ticket.setAssociatedCommit(commits);
+//            }
+//        }catch (GitAPIException e){
+//            throw new RuntimeException(e);
+//        }
+//
+//    }
 
 }

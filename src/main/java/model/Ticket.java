@@ -1,6 +1,5 @@
 package model;
 
-import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 import retrievers.VersionRetriever;
 
@@ -9,110 +8,96 @@ import java.util.ArrayList;
 
 public class Ticket {
 
-    private String key;
-    private LocalDate ticketCreationDate;
-    private LocalDate ticketResolutionDate;
-    private ArrayList<VersionInfo> affectedRelease;
-    private VersionInfo openingRelease;
-    private VersionInfo injectedRelease;
-    private VersionInfo fixedRelease;
-    private VersionRetriever versionRetriever;
-    private ArrayList<RevCommit> associatedCommit;
+    String key;
+    LocalDate ticketCreationDate;
+    LocalDate ticketResolutionDate;
+    ArrayList<VersionInfo> affectedReleases;
+    VersionInfo openingRelease;
+    VersionInfo fixedRelease;
+    VersionInfo injectedRelease;
+    VersionRetriever versionRetriever;
 
-    public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, ArrayList<VersionInfo> affectedRelease, @NotNull VersionRetriever versionRetriever){
-
+    public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, ArrayList<VersionInfo> affectedReleases, @NotNull VersionRetriever versionRetriever) {
         this.ticketCreationDate = LocalDate.parse(creationDate.substring(0, 10));
         this.ticketResolutionDate = LocalDate.parse(resolutionDate.substring(0, 10));
         this.key = key;
-        this.affectedRelease = affectedRelease;
+        setVersionRetriever(versionRetriever);
+        setInjectedRelease(affectedReleases);
+    }
+
+    public VersionRetriever getVersionRetriever() {
+        return versionRetriever;
+    }
+
+    public void setVersionRetriever(VersionRetriever versionRetriever) {
+        if(versionRetriever == null) {
+            throw new RuntimeException();
+        }
         this.versionRetriever = versionRetriever;
-
-    }
-
-    public String getKey() {
-        return this.key;
-    }
-
-    public void setKey(String key) {
-        this.key = key;
     }
 
     public LocalDate getTicketCreationDate() {
-        return this.ticketCreationDate;
-    }
-
-    public void setTicketCreationDate(LocalDate ticketCreationDate) {
-        this.ticketCreationDate = ticketCreationDate;
+        return ticketCreationDate;
     }
 
     public LocalDate getTicketResolutionDate() {
-        return this.ticketResolutionDate;
+        return ticketResolutionDate;
     }
 
-    public void setTicketResolutionDate(LocalDate ticketResolutionDate) {
-        this.ticketResolutionDate = ticketResolutionDate;
+    public String getKey() {
+        return key;
     }
 
-    public ArrayList<VersionInfo> getAffectedRelease() {
-        return this.affectedRelease;
-    }
-
-    public void setAffectedRelease(ArrayList<VersionInfo> affectedRelease) {
-        this.affectedRelease = affectedRelease;
+    public ArrayList<VersionInfo> getAffectedReleases() {
+        return affectedReleases;
     }
 
     public VersionInfo getOpeningRelease() {
-        return this.openingRelease;
+        return openingRelease;
     }
 
     public void setOpeningRelease(VersionInfo openingRelease) {
         this.openingRelease = openingRelease;
     }
 
-    public VersionInfo getInjectedRelease() {
-        return this.injectedRelease;
-    }
-
-    public void setInjectedRelease(VersionInfo injectedRelease) {
-        this.injectedRelease = injectedRelease;
-    }
-
     public VersionInfo getFixedRelease() {
-        return this.fixedRelease;
+        return fixedRelease;
     }
 
     public void setFixedRelease(VersionInfo fixedRelease) {
         this.fixedRelease = fixedRelease;
+        computeAffectedRelease();
     }
 
-    public VersionRetriever getVersionRetriever() {
-        return this.versionRetriever;
+    public VersionInfo getInjectedRelease() {
+        return injectedRelease;
     }
 
-    public void setVersionRetriever(VersionRetriever versionRetriever) {
-        this.versionRetriever = versionRetriever;
+    public void setInjectedRelease(VersionInfo release) {
+        this.injectedRelease = release;
+        computeAffectedRelease();
     }
 
-    private void computeAffectedRelease(){
+    private void setInjectedRelease(ArrayList<VersionInfo> affectedReleases) {
+        if(!affectedReleases.isEmpty()) {
+            this.injectedRelease = affectedReleases.get(0);
+            computeAffectedRelease();
+        } else {
+            this.injectedRelease = null;
+        }
+    }
 
-        if(this.injectedRelease == null || this.fixedRelease == null)
-            return;
+    public void computeAffectedRelease() {
+        // Execute the method only if the ticket has fixed and injected release
+        if(this.injectedRelease == null || this.fixedRelease == null) return;
 
-        ArrayList<VersionInfo> affectedVersions = new ArrayList<>();
-        for(VersionInfo versionInfo: versionRetriever.getProjectVersions()){
-            if((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() <= this.fixedRelease.getIndex())){
-                affectedVersions.add(versionInfo);
+        ArrayList<VersionInfo> affectedReleases = new ArrayList<>();
+        for (VersionInfo versionInfo : versionRetriever.getProjectVersions()) {
+            if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() <= this.fixedRelease.getIndex())) {
+                affectedReleases.add(versionInfo);
             }
         }
 
-        this.affectedRelease = affectedVersions;
-    }
-
-    public ArrayList<RevCommit> getAssociatedCommit() {
-        return associatedCommit;
-    }
-
-    public void setAssociatedCommit(ArrayList<RevCommit> associatedCommit) {
-        this.associatedCommit = associatedCommit;
+        this.affectedReleases = affectedReleases;
     }
 }

@@ -5,7 +5,6 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import utils.GitUtils;
 
@@ -53,6 +52,15 @@ public class CommitRetriever {
         }
         return associatedCommit;
     }
+
+//    private @Nullable RevCommit retrieveCommit(@NotNull ArrayList<RevCommit> commits, Ticket ticket) {
+//        for(RevCommit commit: commits) {
+//            if(commit.getFullMessage().contains(ticket.getKey())) {
+//                return commit;
+//            }
+//        }
+//        return null;
+//    }
     public Git getGit() {
         return this.git;
     }

@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets;
 
 public class JSONUtils {
 
-    public static JSONObject getJsonFromUrl(String url) throws IOException, JSONException {
+    public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
 
         try(InputStream inputStream = (new URI(url)).toURL().openStream()){
 
@@ -27,7 +27,18 @@ public class JSONUtils {
         }
     }
 
-    public static JSONArray getJsonArrayFromURL(String url) throws IOException, JSONException{
+    private static String readAllFIle(BufferedReader bufferedReader) throws IOException{
+
+        StringBuilder stringBuilder = new StringBuilder();
+        int cp;
+        while((cp = bufferedReader.read()) != -1){
+            stringBuilder.append((char) cp);
+        }
+        return stringBuilder.toString();
+
+    }
+
+    public static JSONArray readJsonArrayFromURL(String url) throws IOException, JSONException{
 
         try(InputStream inputStream = (new URI(url)).toURL().openStream()){
 
@@ -38,17 +49,6 @@ public class JSONUtils {
         }catch (URISyntaxException e){
             throw new RuntimeException(e);
         }
-
-    }
-
-    private static String readAllFIle(BufferedReader bufferedReader) throws IOException{
-
-        StringBuilder stringBuilder = new StringBuilder();
-        int cp;
-        while((cp = bufferedReader.read()) != -1){
-            stringBuilder.append((char) cp);
-        }
-        return stringBuilder.toString();
 
     }
 

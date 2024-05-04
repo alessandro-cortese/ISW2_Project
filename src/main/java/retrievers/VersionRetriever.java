@@ -8,7 +8,6 @@ import org.json.JSONObject;
 import utils.JSONUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,8 +23,6 @@ public class VersionRetriever {
     private static final String ID = "id";
     private static final String NAME = "name";
     public VersionRetriever(String projectName){
-        //Populate the ArrayList with releases dates and rearranges them
-        //Ignores releases with missing dates
         try{
             getVersions(projectName);
         }catch (IOException e){
@@ -36,7 +33,7 @@ public class VersionRetriever {
     private void getVersions(String projectName) throws IOException{
 
         String projectUrl = URL + projectName;
-        JSONObject jsonObject = JSONUtils.getJsonFromUrl(projectUrl);
+        JSONObject jsonObject = JSONUtils.readJsonFromUrl(projectUrl);
         JSONArray jsonArrayVersion = jsonObject.getJSONArray(VERSIONS);
 
         this.projectVersions = createVersionArray(jsonArrayVersion);
