@@ -1,12 +1,12 @@
 package utils;
 
 import model.Ticket;
-
+import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 
 public class Proportion {
 
-    public static double computeProportionValue(ArrayList<Ticket> consistentTickets) {
+    public static double computeProportionValue(@NotNull ArrayList<Ticket> consistentTickets) {
 
         double proportionSum = 0;
         int valiatedCount = 0;

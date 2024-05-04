@@ -1,5 +1,6 @@
 package model;
 
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 import retrievers.VersionRetriever;
 
@@ -13,6 +14,8 @@ public class Ticket {
     LocalDate ticketCreationDate;
     LocalDate ticketResolutionDate;
     List<VersionInfo> affectedReleases;
+
+    List<RevCommit> associatedCommits;
     VersionInfo openingRelease;
     VersionInfo fixedRelease;
     VersionInfo injectedRelease;
@@ -43,6 +46,10 @@ public class Ticket {
 
     public LocalDate getTicketResolutionDate() {
         return ticketResolutionDate;
+    }
+
+    public void setAssociatedCommits(List<RevCommit> associatedCommits){
+        this.associatedCommits = associatedCommits;
     }
 
     public String getKey() {
@@ -94,7 +101,7 @@ public class Ticket {
 
         ArrayList<VersionInfo> infos = new ArrayList<>();
         for (VersionInfo versionInfo : versionRetriever.getProjectVersions()) {
-            if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() <= this.fixedRelease.getIndex())) {
+            if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() < this.fixedRelease.getIndex())) {
                 infos.add(versionInfo);
             }
         }

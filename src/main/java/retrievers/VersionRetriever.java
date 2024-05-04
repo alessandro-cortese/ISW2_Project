@@ -97,6 +97,7 @@ public class VersionRetriever {
             }
         }
 
+        System.out.println("Versions: " + affectedVersions.size());
         return affectedVersions;
 
     }

@@ -5,10 +5,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import model.VersionInfo;
+import utils.ColdStart;
 import utils.JSONUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import utils.Proportion;
+import utils.TicketUtils;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -18,14 +20,36 @@ public class TicketRetriever {
 
     private VersionRetriever versionRetriever;
     private ArrayList<Ticket> tickets;
+    private boolean coldStart = false;
 
 
-    public TicketRetriever(String projectName, String issueType, String state, String resolution) {
+    public TicketRetriever(String projectName) {
+
+        String issueType = "Bug";
+        String state = "closed";
+        String resolution = "fixed";
 
         try {
 
             versionRetriever = new VersionRetriever(projectName);
             tickets = retrieveBugTickets(projectName, issueType, state, resolution);
+            //TicketUtils.printTickets(tickets);
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public TicketRetriever(String projectName, boolean coldStart){
+        String issueType = "Bug";
+        String state = "closed";
+        String resolution = "fixed";
+        this.coldStart = coldStart;
+        try {
+
+            versionRetriever = new VersionRetriever(projectName);
+            tickets = retrieveBugTickets(projectName, issueType, state, resolution);
+            //TicketUtils.printTickets(tickets);
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -88,7 +112,7 @@ public class TicketRetriever {
             }
         } while (i < total);
 
-        adjustInconsistentTickets(inconsistentTickets, consistentTickets);
+        if(!this.coldStart)adjustInconsistentTickets(inconsistentTickets, consistentTickets);
 
         return consistentTickets;
 
@@ -96,7 +120,14 @@ public class TicketRetriever {
 
     private void adjustInconsistentTickets(@NotNull ArrayList<Ticket> inconsistentTickets, ArrayList<Ticket> consistentTickets) {
 
-        double proportionValue = Proportion.computeProportionValue(consistentTickets);
+        double proportionValue;
+
+        if(consistentTickets.size() >= 500){
+            proportionValue = Proportion.computeProportionValue(consistentTickets);
+        }else{
+            proportionValue = Proportion.computeProportionValue(ColdStart.coldStart());
+        }
+
         System.out.println("Proportion value: " + proportionValue);
         for(Ticket ticket: inconsistentTickets){
             fixTicket(ticket, proportionValue);
