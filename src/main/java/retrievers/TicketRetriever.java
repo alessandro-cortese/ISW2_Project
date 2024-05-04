@@ -34,7 +34,13 @@ public class TicketRetriever {
             versionRetriever = new VersionRetriever(projectName);
             tickets = retrieveBugTickets(projectName, issueType, state, resolution);
             //TicketUtils.printTickets(tickets);
+            System.out.println("Ticket extract from " + projectName + "; " + tickets.size());
+            int count = 0;
+            for(Ticket ticket: tickets){
+                count += ticket.getAssociatedCommits().size();
+            }
 
+            System.out.println("Commit extract from " + projectName + ": " + count);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -114,15 +120,16 @@ public class TicketRetriever {
 
         if(!this.coldStart)adjustInconsistentTickets(inconsistentTickets, consistentTickets);
 
-        return consistentTickets;
+        CommitRetriever commitRetriever = new CommitRetriever("/home/ales/Documents/GitHub/" + projectName.toLowerCase());
+        return commitRetriever.associateTicketAndCommit(commitRetriever, consistentTickets);
 
     }
 
-    private void adjustInconsistentTickets(@NotNull ArrayList<Ticket> inconsistentTickets, ArrayList<Ticket> consistentTickets) {
+    private void adjustInconsistentTickets(@NotNull ArrayList<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) {
 
         double proportionValue;
 
-        if(consistentTickets.size() >= 500){
+        if(consistentTickets.size() >= 5){
             proportionValue = Proportion.computeProportionValue(consistentTickets);
         }else{
             proportionValue = Proportion.computeProportionValue(ColdStart.coldStart());

@@ -17,32 +17,11 @@ public class Main {
         String zookeeper = "ZOOKEEPER";
         String zookeeperPath = "/home/ales/Documents/GitHub/zookeeper";
 
-
-        //CommitRetriever bookkeeperCommitRetriever = new CommitRetriever(bookkeeperPath);
-        //CommitRetriever zookeeperCommitRetriever = new CommitRetriever(zookeeperPath);
-
         TicketRetriever bookkeeperRetriever = new TicketRetriever(bookkeeper);
         TicketRetriever zookeeperRetriever = new TicketRetriever(zookeeper);
 
         ArrayList<Ticket> bookkeeperTickets = bookkeeperRetriever.getTickets();
         ArrayList<Ticket> zookeeperTickets = zookeeperRetriever.getTickets();
-
-        //associatedTicketAndCommit(bookkeeperCommitRetriever, bookkeeperTickets);
-        //associatedTicketAndCommit(zookeeperCommitRetriever, zookeeperTickets);
-
-    }
-
-    private static void associatedTicketAndCommit(CommitRetriever commitRetriever, ArrayList<Ticket> projectTickets){
-
-        try{
-            ArrayList<RevCommit> commits = commitRetriever.retrieveCommit();
-            for(Ticket ticket: projectTickets){
-                ArrayList<RevCommit> associatedCommits = commitRetriever.retrieveCommit(ticket);
-                ticket.setAssociatedCommits(associatedCommits);
-            }
-        }catch (GitAPIException e){
-            throw new RuntimeException(e);
-        }
 
     }
 

@@ -15,7 +15,7 @@ public class Ticket {
     LocalDate ticketResolutionDate;
     List<VersionInfo> affectedReleases;
 
-    List<RevCommit> associatedCommits;
+    ArrayList<RevCommit> associatedCommits;
     VersionInfo openingRelease;
     VersionInfo fixedRelease;
     VersionInfo injectedRelease;
@@ -48,8 +48,12 @@ public class Ticket {
         return ticketResolutionDate;
     }
 
-    public void setAssociatedCommits(List<RevCommit> associatedCommits){
+    public void setAssociatedCommits(ArrayList<RevCommit> associatedCommits){
         this.associatedCommits = associatedCommits;
+    }
+
+    public ArrayList<RevCommit> getAssociatedCommits() {
+        return this.associatedCommits;
     }
 
     public String getKey() {
@@ -85,6 +89,7 @@ public class Ticket {
         this.injectedRelease = release;
         computeAffectedRelease();
     }
+
 
     private void setInjectedRelease(ArrayList<VersionInfo> affectedReleases) {
         if(!affectedReleases.isEmpty()) {
