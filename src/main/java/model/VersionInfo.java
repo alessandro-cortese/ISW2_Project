@@ -6,34 +6,34 @@ import java.time.LocalDate;
 
 public class VersionInfo {
 
-    private String Id;
+    private String id;
     private Integer index;
     private String name;
     private LocalDate date;
 
     public VersionInfo(String Id, String name,Integer index, @NotNull LocalDate date){
 
-        this.Id = Id;
+        this.id = Id;
         this.name = name;
         this.index = index;
         this.date = date;
 
     }
 
-    public VersionInfo(String Id, String name, @NotNull LocalDate date){
+    public VersionInfo(String id, String name, @NotNull LocalDate date){
 
-        this.Id = Id;
+        this.id = id;
         this.name = name;
         this.date = date;
 
     }
 
     public String getId() {
-        return this.Id;
+        return this.id;
     }
 
     public void setId(String id) {
-        this.Id = id;
+        this.id = id;
     }
 
     public Integer getIndex() {

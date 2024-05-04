@@ -1,8 +1,6 @@
 package org.example;
 
 import model.Ticket;
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.revwalk.RevCommit;
 import retrievers.CommitRetriever;
 import retrievers.TicketRetriever;
 import java.io.IOException;
@@ -15,13 +13,13 @@ public class Main {
         String state = "closed";
         String resolution = "fixed";
         String bookkeeper = "BOOKKEEPER";
-        String BOOKKEEPER_PATH = "/home/ales/Documents/GitHub/bookkeeper";
+        String bookkeeperPath = "/home/ales/Documents/GitHub/bookkeeper";
         String zookeeper = "ZOOKEEPER";
-        String ZOOKEEPER_PATH = "/home/ales/Documents/GitHub/zookeeper";
+        String zookeeperPath = "/home/ales/Documents/GitHub/zookeeper";
 
 
-        CommitRetriever bookkeeperCommitRetriever = new CommitRetriever(BOOKKEEPER_PATH);
-        CommitRetriever zookeeperCommitRetriever = new CommitRetriever(ZOOKEEPER_PATH);
+        CommitRetriever bookkeeperCommitRetriever = new CommitRetriever(bookkeeperPath);
+        CommitRetriever zookeeperCommitRetriever = new CommitRetriever(zookeeperPath);
 
         ArrayList<Ticket> bookkeeperTickets = new ArrayList<>();
 
