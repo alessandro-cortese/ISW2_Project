@@ -5,13 +5,14 @@ import retrievers.VersionRetriever;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Ticket {
 
     String key;
     LocalDate ticketCreationDate;
     LocalDate ticketResolutionDate;
-    ArrayList<VersionInfo> affectedReleases;
+    List<VersionInfo> affectedReleases;
     VersionInfo openingRelease;
     VersionInfo fixedRelease;
     VersionInfo injectedRelease;
@@ -48,7 +49,7 @@ public class Ticket {
         return key;
     }
 
-    public ArrayList<VersionInfo> getAffectedReleases() {
+    public List<VersionInfo> getAffectedReleases() {
         return affectedReleases;
     }
 
@@ -91,13 +92,13 @@ public class Ticket {
         // Execute the method only if the ticket has fixed and injected release
         if(this.injectedRelease == null || this.fixedRelease == null) return;
 
-        ArrayList<VersionInfo> affectedReleases = new ArrayList<>();
+        ArrayList<VersionInfo> infos = new ArrayList<>();
         for (VersionInfo versionInfo : versionRetriever.getProjectVersions()) {
             if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() <= this.fixedRelease.getIndex())) {
-                affectedReleases.add(versionInfo);
+                infos.add(versionInfo);
             }
         }
 
-        this.affectedReleases = affectedReleases;
+        this.affectedReleases = infos;
     }
 }
