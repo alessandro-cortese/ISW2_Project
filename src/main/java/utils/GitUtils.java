@@ -6,7 +6,9 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 public class GitUtils {
@@ -21,6 +23,11 @@ public class GitUtils {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public static LocalDate castToLocalDate(Date date) {
+        SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
+        return LocalDate.parse(dateFormatter.format(date));
     }
 
     public static void printCommit(List<RevCommit> commits){
