@@ -8,7 +8,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import utils.GitUtils;
-
+import java.util.List;
 import java.util.ArrayList;
 
 public class CommitRetriever {
@@ -38,13 +38,13 @@ public class CommitRetriever {
         }
     }*/
 
-    public @Nullable ArrayList<RevCommit> retrieveAssociatedCommit(@NotNull ArrayList<RevCommit> commits, Ticket ticket) throws GitAPIException{
+    public @Nullable List<RevCommit> retrieveAssociatedCommit(@NotNull List<RevCommit> commits, Ticket ticket) throws GitAPIException{
 
         Iterable<RevCommit> commitIterable = git.log().call();
         for(RevCommit commit: commitIterable)
             commits.add(commit);
 
-        ArrayList<RevCommit> associatedCommit = new ArrayList<>();
+        List<RevCommit> associatedCommit = new ArrayList<>();
         for(RevCommit commit: commits){
             if(commit.getFullMessage().contains(ticket.getKey())){
                 associatedCommit.add(commit);
@@ -64,19 +64,18 @@ public class CommitRetriever {
         return commits;
     }
 
-    public ArrayList<Ticket> associateTicketAndCommit(CommitRetriever commitRetriever, ArrayList<Ticket> tickets) {
+    public List<Ticket> associateTicketAndCommit(CommitRetriever commitRetriever, List<Ticket> tickets) {
         try {
             ArrayList<RevCommit> commits = commitRetriever.retrieveCommit();
             for (Ticket ticket : tickets) {
-                ArrayList<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommit(commits, ticket);
+                List<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommit(commits, ticket);
                 ticket.setAssociatedCommits(associatedCommits);
                 //GitUtils.printCommit(associatedCommits);
             }
-            tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty());
+            tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty()/* || (ticket.getOpeningRelease().getIndex() == 0)*/);
         } catch (GitAPIException e) {
             throw new RuntimeException(e);
         }
-
         return tickets;
     }
 

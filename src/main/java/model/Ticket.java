@@ -15,13 +15,13 @@ public class Ticket {
     LocalDate ticketResolutionDate;
     List<VersionInfo> affectedReleases;
 
-    ArrayList<RevCommit> associatedCommits;
+    List<RevCommit> associatedCommits;
     VersionInfo openingRelease;
     VersionInfo fixedRelease;
     VersionInfo injectedRelease;
     VersionRetriever versionRetriever;
 
-    public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, ArrayList<VersionInfo> affectedReleases, @NotNull VersionRetriever versionRetriever) {
+    public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, List<VersionInfo> affectedReleases, @NotNull VersionRetriever versionRetriever) {
         this.ticketCreationDate = LocalDate.parse(creationDate.substring(0, 10));
         this.ticketResolutionDate = LocalDate.parse(resolutionDate.substring(0, 10));
         this.key = key;
@@ -48,11 +48,11 @@ public class Ticket {
         return ticketResolutionDate;
     }
 
-    public void setAssociatedCommits(ArrayList<RevCommit> associatedCommits){
+    public void setAssociatedCommits(List<RevCommit> associatedCommits){
         this.associatedCommits = associatedCommits;
     }
 
-    public ArrayList<RevCommit> getAssociatedCommits() {
+    public List<RevCommit> getAssociatedCommits() {
         return this.associatedCommits;
     }
 
@@ -91,7 +91,7 @@ public class Ticket {
     }
 
 
-    private void setInjectedRelease(ArrayList<VersionInfo> affectedReleases) {
+    private void setInjectedRelease(List<VersionInfo> affectedReleases) {
         if(!affectedReleases.isEmpty()) {
             this.injectedRelease = affectedReleases.get(0);
             computeAffectedRelease();
@@ -104,13 +104,13 @@ public class Ticket {
         // Execute the method only if the ticket has fixed and injected release
         if(this.injectedRelease == null || this.fixedRelease == null) return;
 
-        ArrayList<VersionInfo> infos = new ArrayList<>();
+        List<VersionInfo> releases = new ArrayList<>();
         for (VersionInfo versionInfo : versionRetriever.getProjectVersions()) {
             if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() < this.fixedRelease.getIndex())) {
-                infos.add(versionInfo);
+                releases.add(versionInfo);
             }
         }
 
-        this.affectedReleases = infos;
+        this.affectedReleases = releases;
     }
 }

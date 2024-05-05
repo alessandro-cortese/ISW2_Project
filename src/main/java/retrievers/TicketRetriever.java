@@ -10,16 +10,18 @@ import utils.JSONUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import utils.Proportion;
-import utils.TicketUtils;
-
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
+
+import static utils.ColdStart.coldStart;
 
 public class TicketRetriever {
 
+    private static final String FIELDS = "fields";
     private VersionRetriever versionRetriever;
-    private ArrayList<Ticket> tickets;
+    private List<Ticket> tickets;
     private boolean coldStart = false;
 
 
@@ -64,8 +66,8 @@ public class TicketRetriever {
 
     private boolean setReleaseInfoInTicket(@NotNull Ticket ticket){
 
-        VersionInfo openingRelease = retrieveRelease(ticket.getTicketCreationDate());
-        VersionInfo fixRelease = retrieveRelease(ticket.getTicketResolutionDate());
+        VersionInfo openingRelease = retrieveNextRelease(ticket.getTicketCreationDate());
+        VersionInfo fixRelease = retrieveNextRelease(ticket.getTicketResolutionDate());
 
         if(openingRelease == null || fixRelease == null)
             return false;
@@ -77,7 +79,7 @@ public class TicketRetriever {
 
     }
 
-    private @Nullable VersionInfo retrieveRelease(LocalDate date){
+    private @Nullable VersionInfo retrieveNextRelease(LocalDate date){
 
         for(VersionInfo versionInfo: versionRetriever.getProjectVersions()){
             LocalDate releaseDate = versionInfo.getDate();
@@ -89,9 +91,11 @@ public class TicketRetriever {
 
     }
 
-    private @NotNull ArrayList<Ticket> retrieveBugTickets(String projectName, String issueType, String state, String resolution) throws IOException, JSONException{
+    private @NotNull List<Ticket> retrieveBugTickets(String projectName, String issueType, String state, String resolution) throws IOException, JSONException{
 
-        int i = 0, j, total;
+        int i = 0;
+        int j;
+        int total;
         ArrayList<Ticket> consistentTickets = new ArrayList<>();
         ArrayList<Ticket> inconsistentTickets = new ArrayList<>();
 
@@ -108,9 +112,9 @@ public class TicketRetriever {
             for (; i < total && i < j; i++) {
                 //Iterate through each bug
                 String key = issues.getJSONObject(i%1000).get("key").toString();
-                String resolutionDate = issues.getJSONObject(i%1000).getJSONObject("fields").get("resolutiondate").toString();
-                String creationDate = issues.getJSONObject(i%1000).getJSONObject("fields").get("created").toString();
-                ArrayList<VersionInfo> releases = versionRetriever.getAffectedVersion(issues.getJSONObject(i%1000).getJSONObject("fields").getJSONArray("versions"));
+                String resolutionDate = issues.getJSONObject(i%1000).getJSONObject(FIELDS).get("resolutiondate").toString();
+                String creationDate = issues.getJSONObject(i%1000).getJSONObject(FIELDS).get("created").toString();
+                List<VersionInfo> releases = versionRetriever.getAffectedVersion(issues.getJSONObject(i%1000).getJSONObject(FIELDS).getJSONArray("versions"));
                 Ticket ticket = new Ticket(creationDate, resolutionDate, key, releases, versionRetriever);
                 if(!setReleaseInfoInTicket(ticket))
                     continue;
@@ -120,25 +124,25 @@ public class TicketRetriever {
 
         if(!this.coldStart)adjustInconsistentTickets(inconsistentTickets, consistentTickets);
 
-        CommitRetriever commitRetriever = new CommitRetriever("/home/ales/Documents/GitHub/" + projectName.toLowerCase());
+        CommitRetriever commitRetriever = new CommitRetriever("/home/ales/Documents/GitRepositories/" + projectName.toLowerCase());
         return commitRetriever.associateTicketAndCommit(commitRetriever, consistentTickets);
 
     }
 
-    private void adjustInconsistentTickets(@NotNull ArrayList<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) {
+    private void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) {
 
         double proportionValue;
 
         if(consistentTickets.size() >= 5){
             proportionValue = Proportion.computeProportionValue(consistentTickets);
         }else{
-            proportionValue = Proportion.computeProportionValue(ColdStart.coldStart());
+            proportionValue = Proportion.computeProportionValue(coldStart());
         }
 
         System.out.println("Proportion value: " + proportionValue);
         for(Ticket ticket: inconsistentTickets){
             fixTicket(ticket, proportionValue);
-            if(!consistencyCheck(ticket)){
+            if(!isNotConsistent(ticket)){
                 throw new RuntimeException();
             }
             consistentTickets.add(ticket);
@@ -160,9 +164,9 @@ public class TicketRetriever {
 
     private void fixTicket(Ticket ticket, double proportionValue){
 
-        VersionInfo OV = ticket.getOpeningRelease();
-        VersionInfo FV = ticket.getFixedRelease();
-        int newIndex = (int) (FV.getIndex() - (FV.getIndex() - OV.getIndex())*proportionValue);
+        VersionInfo ov = ticket.getOpeningRelease();
+        VersionInfo fv = ticket.getFixedRelease();
+        int newIndex = (int) (fv.getIndex() - (fv.getIndex() - ov.getIndex())*proportionValue);
         if(newIndex < 0){
             ticket.setInjectedRelease(versionRetriever.getProjectVersions().get(0));
             return;
@@ -176,20 +180,20 @@ public class TicketRetriever {
         // IV <= OV <= FV, IV = AV[0]
         // If condition is false, we have an inconsistency ticket
 
-        if(!consistencyCheck(ticket))
+        if(!isNotConsistent(ticket))
             inconsistentTicket.add(ticket);
         else
             consistentTicket.add(ticket);
 
     }
 
-    private static boolean  consistencyCheck(Ticket ticket){
+    private static boolean isNotConsistent(Ticket ticket){
 
-        VersionInfo IV = ticket.getInjectedRelease();
-        VersionInfo OV = ticket.getOpeningRelease();
-        VersionInfo FV = ticket.getFixedRelease();
+        VersionInfo iv = ticket.getInjectedRelease();
+        VersionInfo ov = ticket.getOpeningRelease();
+        VersionInfo fv = ticket.getFixedRelease();
 
-        return IV != null && IV.getIndex() <= OV.getIndex() && OV.getIndex() <= FV.getIndex();
+        return iv != null && iv.getIndex() <= ov.getIndex() && ov.getIndex() <= fv.getIndex();
 
     }
 
@@ -202,11 +206,11 @@ public class TicketRetriever {
     }
 
 
-    public ArrayList<Ticket> getTickets(){
+    public List<Ticket> getTickets(){
         return this.tickets;
     }
 
-    public void setTickets(ArrayList<Ticket> tickets){
+    public void setTickets(List<Ticket> tickets){
         this.tickets = tickets;
     }
 

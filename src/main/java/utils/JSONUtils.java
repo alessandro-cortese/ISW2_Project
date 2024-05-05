@@ -14,6 +14,8 @@ import java.nio.charset.StandardCharsets;
 
 public class JSONUtils {
 
+    private JSONUtils() {}
+
     public static JSONObject readJsonFromUrl(String url) throws IOException, JSONException {
 
         try(InputStream inputStream = (new URI(url)).toURL().openStream()){
@@ -35,20 +37,6 @@ public class JSONUtils {
             stringBuilder.append((char) cp);
         }
         return stringBuilder.toString();
-
-    }
-
-    public static JSONArray readJsonArrayFromURL(String url) throws IOException, JSONException{
-
-        try(InputStream inputStream = (new URI(url)).toURL().openStream()){
-
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-            String textJSON = readAllFIle(bufferedReader);
-            return new JSONArray(textJSON);
-
-        }catch (URISyntaxException e){
-            throw new RuntimeException(e);
-        }
 
     }
 
