@@ -53,10 +53,10 @@ public class CommitRetriever {
         return associatedCommit;
     }
 
-    public ArrayList<RevCommit> retrieveCommit() throws GitAPIException {
+    public List<RevCommit> retrieveCommit() throws GitAPIException {
         Iterable<RevCommit> commitIterable = git.log().call();
 
-        ArrayList<RevCommit> commits = new ArrayList<>();
+        List<RevCommit> commits = new ArrayList<>();
         for(RevCommit commit: commitIterable) {
             commits.add(commit);
         }
@@ -66,7 +66,7 @@ public class CommitRetriever {
 
     public List<Ticket> associateTicketAndCommit(CommitRetriever commitRetriever, List<Ticket> tickets) {
         try {
-            ArrayList<RevCommit> commits = commitRetriever.retrieveCommit();
+            List<RevCommit> commits = commitRetriever.retrieveCommit();
             for (Ticket ticket : tickets) {
                 List<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommit(commits, ticket);
                 ticket.setAssociatedCommits(associatedCommits);
@@ -79,14 +79,6 @@ public class CommitRetriever {
         return tickets;
     }
 
-//    private @Nullable RevCommit retrieveCommit(@NotNull ArrayList<RevCommit> commits, Ticket ticket) {
-//        for(RevCommit commit: commits) {
-//            if(commit.getFullMessage().contains(ticket.getKey())) {
-//                return commit;
-//            }
-//        }
-//        return null;
-//    }
     public Git getGit() {
         return this.git;
     }

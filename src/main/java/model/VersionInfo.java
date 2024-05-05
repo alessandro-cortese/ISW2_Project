@@ -11,9 +11,9 @@ public class VersionInfo {
     private String name;
     private LocalDate date;
 
-    public VersionInfo(String Id, String name,Integer index, @NotNull LocalDate date){
+    public VersionInfo(String id, String name,Integer index, @NotNull LocalDate date){
 
-        this.id = Id;
+        this.id = id;
         this.name = name;
         this.index = index;
         this.date = date;
