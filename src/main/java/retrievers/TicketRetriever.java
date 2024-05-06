@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import model.VersionInfo;
-import utils.TicketUtils;
 import utils.JSONUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,6 +26,15 @@ public class TicketRetriever {
     private CommitRetriever commitRetriever;
 
     public TicketRetriever(String projectName) {
+        init(projectName);
+    }
+
+    public TicketRetriever(String projectName, boolean coldStart) {
+        this.coldStart = coldStart;
+        init(projectName);
+    }
+    
+    private void init(String projectName) {
 
         String issueType = "Bug";
         String state = "closed";
@@ -35,30 +43,12 @@ public class TicketRetriever {
         try {
             versionRetriever = new VersionRetriever(projectName);
             tickets = retrieveBugTickets(projectName, issueType, state, resolution);
-            TicketUtils.printTickets(tickets);
             System.out.println("Ticket extract from " + projectName + "; " + tickets.size());
             int count = 0;
             for(Ticket ticket: tickets){
                 count += ticket.getAssociatedCommits().size();
             }
-
-            System.out.println("Commit extract from " + projectName + ": " + count);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public TicketRetriever(String projectName, boolean coldStart){
-        String issueType = "Bug";
-        String state = "closed";
-        String resolution = "fixed";
-        this.coldStart = coldStart;
-        try {
-
-            versionRetriever = new VersionRetriever(projectName);
-            tickets = retrieveBugTickets(projectName, issueType, state, resolution);
-            //TicketUtils.printTickets(tickets);
-
+            System.out.println("Commits associated to ticket extract from: " + projectName + ": " + count);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -121,7 +111,7 @@ public class TicketRetriever {
         discardInvalidTicket(consistentTickets);
 
         commitRetriever = new CommitRetriever("/home/ales/Documents/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
-        return commitRetriever.associateTicketAndCommit(versionRetriever, commitRetriever, consistentTickets);
+        return commitRetriever.associateTicketAndCommit(consistentTickets);
     }
 
     /**Discard tickets that have OV > FV or that have IV=OV*/

@@ -40,23 +40,6 @@ public class CommitRetriever {
         this.versionRetriever = versionRetriever;
     }
 
-    /*public void retrieveReleaseInfoForTickets(ArrayList<Ticket> tickets) {
-        try {
-            Iterable<RevCommit> commitIterable = git.log().call();
-            ArrayList<RevCommit> commits = new ArrayList<>();
-            for(RevCommit commit: commitIterable) {
-                commits.add(commit);
-            }
-            for(Ticket ticket: tickets) {
-                //TODO take the right commit? Date OpeningVersion > Date FixVersion
-                RevCommit commit = retrieveCommit(commits, ticket);
-                if(commit != null) setReleaseInfoInTicket(commit, ticket);
-            }
-        } catch (GitAPIException e) {
-            throw new RuntimeException(e);
-        }
-    }*/
-
 
     public @Nullable List<RevCommit> retrieveAssociatedCommits(@NotNull List<RevCommit> commits, Ticket ticket) throws GitAPIException{
 
@@ -73,7 +56,8 @@ public class CommitRetriever {
         return associatedCommit;
     }
 
-    public List<RevCommit> retrieveCommit(VersionRetriever versionRetriever) throws GitAPIException {
+    public List<RevCommit> retrieveCommit() throws GitAPIException {
+        if(commitList != null) return commitList;
         Iterable<RevCommit> commitIterable = git.log().call();
 
         List<RevCommit> commits = new ArrayList<>();
@@ -88,11 +72,13 @@ public class CommitRetriever {
         return commits;
     }
 
-    public List<Ticket> associateTicketAndCommit(VersionRetriever versionRetriever, CommitRetriever commitRetriever, List<Ticket> tickets) {
+
+
+    public List<Ticket> associateTicketAndCommit(List<Ticket> tickets) {
         try {
-            List<RevCommit> commits = commitRetriever.retrieveCommit(versionRetriever);
+            List<RevCommit> commits = this.retrieveCommit();
             for (Ticket ticket : tickets) {
-                List<RevCommit> associatedCommits = commitRetriever.retrieveAssociatedCommits(commits, ticket);
+                List<RevCommit> associatedCommits = this.retrieveAssociatedCommits(commits, ticket);
                 ticket.setAssociatedCommits(associatedCommits);
                 //GitUtils.printCommit(associatedCommits);
             }
@@ -103,19 +89,15 @@ public class CommitRetriever {
         return tickets;
     }
 
-    public void retrieveChangesFromTickets(List<Ticket> tickets) {
-        for(Ticket ticket: tickets) {
-            retrieveChanges(ticket.getAssociatedCommits());
-        }
-    }
-
     private void retrieveChanges(List<RevCommit> commits) {
         for(RevCommit commit: commits) {
-            retrieveChanges(commit);
+            Map<String, String> classMap = retrieveChanges(commit);
         }
     }
 
-    private void retrieveChanges(RevCommit commit) {
+    private Map<String, String> retrieveChanges(RevCommit commit) {
+
+        Map<String, String> classMap = new HashMap<>();
         try {
             ObjectReader reader = git.getRepository().newObjectReader();
             CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
@@ -130,12 +112,15 @@ public class CommitRetriever {
             List<DiffEntry> entries = diffFormatter.scan(oldTreeIter, newTreeIter);
 
             for (DiffEntry entry : entries) {
+                classMap.put(entry.getNewPath(), new String(this.repository.open(entry.getNewId().toObjectId()).getBytes(), StandardCharsets.UTF_8));
                 System.out.println(entry.getNewPath() + " " + entry.getChangeType());
 
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        return classMap;
     }
 
     public Git getGit() {
@@ -174,8 +159,8 @@ public class CommitRetriever {
 
         Map<String, String> javaClasses = new HashMap<>();
 
-        RevTree tree = commit.getTree();	//We get the tree of the files and the directories that were belong to the repository when commit was pushed
-        TreeWalk treeWalk = new TreeWalk(this.repository);	//We use a TreeWalk to iterate over all files in the Tree recursively
+        RevTree tree = commit.getTree();	                    //We get the tree of the files and the directories that were belong to the repository when commit was pushed
+        TreeWalk treeWalk = new TreeWalk(this.repository);      //We use a TreeWalk to iterate over all files in the Tree recursively
         treeWalk.addTree(tree);
         treeWalk.setRecursive(true);
 
