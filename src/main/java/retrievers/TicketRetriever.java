@@ -24,7 +24,7 @@ public class TicketRetriever {
     private VersionRetriever versionRetriever;
     private List<Ticket> tickets;
     private boolean coldStart = false;
-
+    private CommitRetriever commitRetriever;
 
     public TicketRetriever(String projectName) {
 
@@ -120,11 +120,7 @@ public class TicketRetriever {
 
         discardInvalidTicket(consistentTickets);
 
-        CommitRetriever commitRetriever = new CommitRetriever("/home/ales/Documents/GitRepositories/" + projectName.toLowerCase());
-        TicketUtils.printTickets(consistentTickets);
-        System.out.println("\nTickets extract before delete commit form " + projectName + ": " + consistentTickets.size() + "\n");
-        System.out.println("\n------------------------------------------------------------------------------\n");
-        TicketUtils.sortTickets(consistentTickets);
+        commitRetriever = new CommitRetriever("/home/ales/Documents/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
         return commitRetriever.associateTicketAndCommit(versionRetriever, commitRetriever, consistentTickets);
     }
 
@@ -215,6 +211,14 @@ public class TicketRetriever {
 
     public void setTickets(List<Ticket> tickets){
         this.tickets = tickets;
+    }
+
+    public void setCommitRetriever(CommitRetriever commitRetriever){
+        this.commitRetriever = commitRetriever;
+    }
+
+    public CommitRetriever getCommitRetriever(){
+        return this.commitRetriever;
     }
 
 }

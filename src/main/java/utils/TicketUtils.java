@@ -3,7 +3,7 @@ package utils;
 import model.Ticket;
 import model.VersionInfo;
 import org.jetbrains.annotations.NotNull;
-
+import org.eclipse.jgit.revwalk.RevCommit;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,6 +24,16 @@ public class TicketUtils {
 
     public static void sortTickets(ArrayList<Ticket> tickets) {
         tickets.sort(Comparator.comparing(Ticket::getTicketCreationDate));
+    }
+
+    public static List<RevCommit> getAssociatedCommit(List<Ticket> tickets) {
+        List<RevCommit> commits = new ArrayList<>();
+
+        for(Ticket t: tickets) {
+            commits.addAll(t.getAssociatedCommits());
+        }
+
+        return commits;
     }
 
 }

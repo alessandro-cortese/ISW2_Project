@@ -10,6 +10,10 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
+import model.ReleaseCommits;
+import model.VersionInfo;
+import java.time.ZoneId;
+import java.util.ArrayList;
 
 public class GitUtils {
 
@@ -35,6 +39,41 @@ public class GitUtils {
             System.out.println("Commit: " + commit.getAuthorIdent().getName());
             System.out.println(commit.getFullMessage());
         }
+    }
+
+    public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, VersionInfo release, LocalDate firstDate) {
+
+        List<RevCommit> matchingCommits = new ArrayList<>();
+        LocalDate lastDate = release.getDate();
+
+        for(RevCommit commit : commitsList) {
+            LocalDate commitDate = commit.getCommitterIdent().getWhen().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+            //if firstDate < commitDate <= lastDate then add the commit in matchingCommits list
+            if(commitDate.isAfter(firstDate) && (commitDate.isBefore(lastDate) || commitDate.equals(lastDate))) {
+                matchingCommits.add(commit);
+            }
+
+        }
+
+        if(matchingCommits.isEmpty()) return null;
+
+        RevCommit lastCommit = getLastCommit(matchingCommits);
+
+        return new ReleaseCommits(release, matchingCommits, lastCommit);
+
+    }
+
+    private static RevCommit getLastCommit(List<RevCommit> commitsList) {
+
+        RevCommit lastCommit = commitsList.get(0);
+        for(RevCommit commit : commitsList) {
+            //if commitDate > lastCommitDate then refresh lastCommit
+            if(commit.getCommitterIdent().getWhen().after(lastCommit.getCommitterIdent().getWhen())) {
+                lastCommit = commit;
+            }
+        }
+        return lastCommit;
     }
 
 }

@@ -2,32 +2,42 @@ package retrievers;
 
 import model.Ticket;
 import model.VersionInfo;
+import model.ReleaseCommits;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
+import org.eclipse.jgit.revwalk.RevTree;
+import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import utils.GitUtils;
 import utils.RegularExpression;
 import java.util.List;
+import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Map;
 import java.io.IOException;
 
 public class CommitRetriever {
 
     private Git git;
     private Repository repository;
+    private VersionRetriever versionRetriever;
+    private List<RevCommit> commitList;
 
-    public CommitRetriever(String repositoryPath) {
+    public CommitRetriever(String repositoryPath, VersionRetriever versionRetriever) {
         this.repository = GitUtils.getRepository(repositoryPath);
         this.git = new Git(repository);
+        this.versionRetriever = versionRetriever;
     }
 
     /*public void retrieveReleaseInfoForTickets(ArrayList<Ticket> tickets) {
@@ -46,6 +56,7 @@ public class CommitRetriever {
             throw new RuntimeException(e);
         }
     }*/
+
 
     public @Nullable List<RevCommit> retrieveAssociatedCommits(@NotNull List<RevCommit> commits, Ticket ticket) throws GitAPIException{
 
@@ -72,6 +83,7 @@ public class CommitRetriever {
                 commits.add(commit);
             }
         }
+        this.commitList = commits;
 
         return commits;
     }
@@ -103,7 +115,7 @@ public class CommitRetriever {
         }
     }
 
-    public void retrieveChanges(RevCommit commit) {
+    private void retrieveChanges(RevCommit commit) {
         try {
             ObjectReader reader = git.getRepository().newObjectReader();
             CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
@@ -140,6 +152,44 @@ public class CommitRetriever {
 
     public void setRepository(Repository repository){
         this.repository = repository;
+    }
+
+    public List<ReleaseCommits> getReleaseCommits(VersionRetriever versionRetriever, List<RevCommit> commits) throws GitAPIException, IOException {
+        List<ReleaseCommits> releaseCommits = new ArrayList<>();
+        LocalDate date = LocalDate.of(1900, 1, 1);
+        for(VersionInfo versionInfo: versionRetriever.getProjectVersions()) {
+            ReleaseCommits releaseCommit = GitUtils.getCommitsOfRelease(commits, versionInfo, date);
+            if(releaseCommit != null) {
+                Map<String, String> javaClasses = getClasses(releaseCommit.getLastCommit());
+                releaseCommit.setJavaClasses(javaClasses);
+                releaseCommits.add(releaseCommit);
+            }
+            date = versionInfo.getDate();
+        }
+
+        return releaseCommits;
+    }
+
+    private Map<String, String> getClasses(RevCommit commit) throws IOException {
+
+        Map<String, String> javaClasses = new HashMap<>();
+
+        RevTree tree = commit.getTree();	//We get the tree of the files and the directories that were belong to the repository when commit was pushed
+        TreeWalk treeWalk = new TreeWalk(this.repository);	//We use a TreeWalk to iterate over all files in the Tree recursively
+        treeWalk.addTree(tree);
+        treeWalk.setRecursive(true);
+
+        while(treeWalk.next()) {
+            //We are keeping only Java classes that are not involved in tests
+            if(treeWalk.getPathString().contains(".java") && !treeWalk.getPathString().contains("/test/")) {
+                //We are retrieving (name class, content class) couples
+                javaClasses.put(treeWalk.getPathString(), new String(this.repository.open(treeWalk.getObjectId(0)).getBytes(), StandardCharsets.UTF_8));
+            }
+        }
+        treeWalk.close();
+
+        return javaClasses;
+
     }
 
 }
