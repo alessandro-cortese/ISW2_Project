@@ -6,9 +6,8 @@ import java.util.regex.Pattern;
 public class RegularExpression {
 
     public static boolean matchRegex(String stringToMatch, String commitKey) {
-        Pattern pattern = Pattern.compile(commitKey + "+[^0-9]");
-        Matcher matcher= pattern.matcher(stringToMatch);
-        return matcher.find();
+        Pattern pattern = Pattern.compile(commitKey + "\\b");
+        return pattern.matcher(stringToMatch).find();
     }
     /*public static boolean checkString(String stringToMatch, String commitKey) {
         int i = stringToMatch.indexOf("BOOKKEEPER");

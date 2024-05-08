@@ -94,8 +94,6 @@ public class TicketRetriever {
                         (ticket.getInjectedRelease() != null &&
                                 (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())))
                     continue;
-                System.out.println("Total: " + total);
-                System.out.println("i: "+ i);
                 //If the ticket doesn't have the fixed release, the ticket will be discarded
                 if(ticket.getFixedRelease() != null){
                     System.out.println("Ticket key:" + ticket.getKey() + "; fixed release:  " + ticket.getFixedRelease().getIndex());

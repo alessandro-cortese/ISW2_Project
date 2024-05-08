@@ -13,6 +13,8 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
+import org.eclipse.jgit.diff.Edit;
+import org.eclipse.jgit.diff.RawTextComparator;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import org.jetbrains.annotations.NotNull;
@@ -21,9 +23,7 @@ import utils.GitUtils;
 import utils.RegularExpression;
 import utils.VersionUtil;
 import java.util.List;
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.*;
 import java.io.IOException;
 
@@ -76,8 +76,6 @@ public class CommitRetriever {
         return commits;
     }
 
-
-
     public List<Ticket> associateTicketAndCommit(List<Ticket> tickets) {
         try {
             List<RevCommit> commits = this.retrieveCommit();
@@ -93,15 +91,9 @@ public class CommitRetriever {
         return tickets;
     }
 
-    private void retrieveChanges(List<RevCommit> commits) {
-        for(RevCommit commit: commits) {
-            List<JavaClass> classes = retrieveChanges(commit);
-        }
-    }
+    public List<ChangedJavaClass> retrieveChanges(RevCommit commit) {
 
-    private List<JavaClass> retrieveChanges(RevCommit commit) {
-
-        List<JavaClass> javaClassList = new ArrayList<>();
+        List<ChangedJavaClass> changedJavaClassList = new ArrayList<>();
         try {
             ObjectReader reader = git.getRepository().newObjectReader();
             CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
@@ -116,21 +108,14 @@ public class CommitRetriever {
             List<DiffEntry> entries = diffFormatter.scan(oldTreeIter, newTreeIter);
 
             for (DiffEntry entry : entries) {
-                JavaClass javaClass = new JavaClass(
-                        entry.getNewPath(),
-                        new String(this.repository.open(entry.getNewId().toObjectId()).getBytes(), StandardCharsets.UTF_8),
-                        VersionUtil.retrieveNextRelease(
-                                versionRetriever,
-                                GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()))
-                );
-                JavaClassChange newJavaClassChange = new JavaClassChange(javaClass, entry.getChangeType());
-                javaClassList.add(newJavaClassChange.getJavaClass());
+                ChangedJavaClass newJavaClassChange = new ChangedJavaClass(entry.getNewPath(), entry.getChangeType().toString());
+                changedJavaClassList.add(newJavaClassChange);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        return javaClassList;
+        return changedJavaClassList;
     }
 
     public List<ReleaseCommits> getReleaseCommits(VersionRetriever versionRetriever, List<RevCommit> commits) throws GitAPIException, IOException {
@@ -178,20 +163,57 @@ public class CommitRetriever {
 
     }
 
-    public Git getGit() {
-        return this.git;
+    /*This method initializes two lists:
+     * - List of numbers of added lines by each commit; every entry is associated to one specific commit
+     * - List of numbers of deleted lines by each commit; every entry is associated to one specific commit
+     * These lists will be used to calculate sum, max & avg*/
+    public void computeAddedAndDeletedLinesList(JavaClass javaClass) throws IOException {
+
+        for(RevCommit comm : javaClass.getCommits()) {
+            try(DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+
+                RevCommit parentComm = comm.getParent(0);
+
+                diffFormatter.setRepository(this.repository);
+                diffFormatter.setDiffComparator(RawTextComparator.DEFAULT);
+
+                List<DiffEntry> diffs = diffFormatter.scan(parentComm.getTree(), comm.getTree());
+                for(DiffEntry entry : diffs) {
+                    if(entry.getNewPath().equals(javaClass.getName())) {
+                        javaClass.getMetrics().getAddedLinesList().add(getAddedLines(diffFormatter, entry));
+                        javaClass.getMetrics().getDeletedLinesList().add(getDeletedLines(diffFormatter, entry));
+
+                    }
+
+                }
+
+            } catch(ArrayIndexOutOfBoundsException e) {
+                //commit has no parents: skip this commit, return an empty list and go on
+
+            }
+
+        }
+
+
     }
 
-    public void setGit(Git git) {
-        this.git = git;
+    private int getAddedLines(DiffFormatter diffFormatter, DiffEntry entry) throws IOException {
+
+        int addedLines = 0;
+        for(Edit edit : diffFormatter.toFileHeader(entry).toEditList()) {
+            addedLines += edit.getEndA() - edit.getBeginA();
+        }
+        return addedLines;
+
     }
 
-    public Repository getRepository() {
-        return this.repository;
-    }
+    private int getDeletedLines(DiffFormatter diffFormatter, DiffEntry entry) throws IOException {
 
-    public void setRepository(Repository repository){
-        this.repository = repository;
+        int deletedLines = 0;
+        for (Edit edit : diffFormatter.toFileHeader(entry).toEditList()) {
+            deletedLines += edit.getEndB() - edit.getBeginB();
+        }
+        return deletedLines;
     }
 
 }
