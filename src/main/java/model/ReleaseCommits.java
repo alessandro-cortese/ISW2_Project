@@ -7,15 +7,15 @@ import java.util.Map;
 
 public class ReleaseCommits {
 
-    private VersionInfo release;
+    private Version release;
     private List<RevCommit> commits;
     private RevCommit lastCommit;
-
+    private List<JavaClass> javaClasses;
     //Classes that were present when the release was deployed;
     //they are represented by their name and their content.
-    private Map<String, String> javaClasses;
 
-    public ReleaseCommits(VersionInfo versionInfo, List<RevCommit> commits, RevCommit lastCommit){
+
+    public ReleaseCommits(Version versionInfo, List<RevCommit> commits, RevCommit lastCommit){
 
         this.release = versionInfo;
         this.commits = commits;
@@ -24,11 +24,11 @@ public class ReleaseCommits {
     }
 
 
-    public VersionInfo getRelease() {
+    public Version getRelease() {
         return release;
     }
 
-    public void setRelease(VersionInfo release) {
+    public void setRelease(Version release) {
         this.release = release;
     }
 
@@ -48,11 +48,11 @@ public class ReleaseCommits {
         this.lastCommit = lastCommit;
     }
 
-    public Map<String, String> getJavaClasses() {
+    public List<JavaClass> getJavaClasses() {
         return javaClasses;
     }
 
-    public void setJavaClasses(Map<String, String> javaClasses) {
+    public void setJavaClasses(List<JavaClass> javaClasses) {
         this.javaClasses = javaClasses;
     }
 }

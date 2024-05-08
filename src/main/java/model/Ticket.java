@@ -10,18 +10,17 @@ import java.util.List;
 
 public class Ticket {
 
-    String key;
-    LocalDate ticketCreationDate;
-    LocalDate ticketResolutionDate;
-    List<VersionInfo> affectedReleases;
+     private String key;
+    private LocalDate ticketCreationDate;
+    private LocalDate ticketResolutionDate;
+    private List<Version> affectedReleases;
+    private List<RevCommit> associatedCommits;
+    private Version openingRelease;
+    private Version fixedRelease;
+    private Version injectedRelease;
+    private VersionRetriever versionRetriever;
 
-    List<RevCommit> associatedCommits;
-    VersionInfo openingRelease;
-    VersionInfo fixedRelease;
-    VersionInfo injectedRelease;
-    VersionRetriever versionRetriever;
-
-    public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, List<VersionInfo> affectedReleases, @NotNull VersionRetriever versionRetriever) {
+    public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, List<Version> affectedReleases, @NotNull VersionRetriever versionRetriever) {
         this.ticketCreationDate = LocalDate.parse(creationDate.substring(0, 10));
         this.ticketResolutionDate = LocalDate.parse(resolutionDate.substring(0, 10));
         this.key = key;
@@ -60,38 +59,38 @@ public class Ticket {
         return key;
     }
 
-    public List<VersionInfo> getAffectedReleases() {
+    public List<Version> getAffectedReleases() {
         return affectedReleases;
     }
 
-    public VersionInfo getOpeningRelease() {
+    public Version getOpeningRelease() {
         return openingRelease;
     }
 
-    public void setOpeningRelease(VersionInfo openingRelease) {
+    public void setOpeningRelease(Version openingRelease) {
         this.openingRelease = openingRelease;
     }
 
-    public VersionInfo getFixedRelease() {
+    public Version getFixedRelease() {
         return fixedRelease;
     }
 
-    public void setFixedRelease(VersionInfo fixedRelease) {
+    public void setFixedRelease(Version fixedRelease) {
         this.fixedRelease = fixedRelease;
         computeAffectedRelease();
     }
 
-    public VersionInfo getInjectedRelease() {
+    public Version getInjectedRelease() {
         return injectedRelease;
     }
 
-    public void setInjectedRelease(VersionInfo release) {
+    public void setInjectedRelease(Version release) {
         this.injectedRelease = release;
         computeAffectedRelease();
     }
 
 
-    private void setInjectedRelease(List<VersionInfo> affectedReleases) {
+    private void setInjectedRelease(List<Version> affectedReleases) {
         if(!affectedReleases.isEmpty()) {
             this.injectedRelease = affectedReleases.get(0);
             computeAffectedRelease();
@@ -104,8 +103,8 @@ public class Ticket {
         // Execute the method only if the ticket has fixed and injected release
         if(this.injectedRelease == null || this.fixedRelease == null) return;
 
-        List<VersionInfo> releases = new ArrayList<>();
-        for (VersionInfo versionInfo : versionRetriever.getProjectVersions()) {
+        List<Version> releases = new ArrayList<>();
+        for (Version versionInfo : versionRetriever.getProjectVersions()) {
             if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() < this.fixedRelease.getIndex())) {
                 releases.add(versionInfo);
             }

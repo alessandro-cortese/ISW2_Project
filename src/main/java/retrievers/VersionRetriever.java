@@ -1,12 +1,12 @@
 package retrievers;
 
-import model.VersionInfo;
+import model.Version;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import utils.JSONUtils;
-
+import utils.VersionUtil;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ import java.util.Objects;
 
 public class VersionRetriever {
 
-    private List<VersionInfo> projectVersions;
+    private List<Version> projectVersions;
 
     private static final String URL = "https://issues.apache.org/jira/rest/api/2/project/";
     private static final String VERSIONS = "versions";
@@ -26,6 +26,7 @@ public class VersionRetriever {
     public VersionRetriever(String projectName){
         try{
             getVersions(projectName);
+            VersionUtil.printVersion(projectVersions);
         }catch (IOException e){
             throw new RuntimeException(e);
         }
@@ -39,15 +40,15 @@ public class VersionRetriever {
 
         this.projectVersions = createVersionArray(jsonArrayVersion);
 
-        this.projectVersions.sort(Comparator.comparing(VersionInfo::getDate));
+        this.projectVersions.sort(Comparator.comparing(Version::getDate));
 
         setIndex(this.projectVersions);
 
     }
 
-    private @NotNull List<VersionInfo> createVersionArray(JSONArray jsonArrayVersion) {
+    private @NotNull List<Version> createVersionArray(JSONArray jsonArrayVersion) {
 
-        List<VersionInfo> versionInfoArrayList = new ArrayList<>();
+        List<Version> versionInfoArrayList = new ArrayList<>();
         for(int i = 0; i < jsonArrayVersion.length(); i++){
             String name = "";
             String id = "";
@@ -65,31 +66,31 @@ public class VersionRetriever {
         return versionInfoArrayList;
     }
 
-    private void addRelease(String date, String name, String id, List<VersionInfo> versionInfoArrayList) {
+    private void addRelease(String date, String name, String id, List<Version> versionInfoArrayList) {
         LocalDate localDate = LocalDate.parse(date);
-        VersionInfo newReleaseInfo = new VersionInfo(id, name, localDate);
+        Version newReleaseInfo = new Version(id, name, localDate);
         versionInfoArrayList.add(newReleaseInfo);
 
     }
-    private void setIndex(List<VersionInfo> projectVersions) {
+    private void setIndex(List<Version> projectVersions) {
 
         int index = 0;
-        for(VersionInfo versionInfo: projectVersions){
+        for(Version versionInfo: projectVersions){
             versionInfo.setIndex(index);
             index++;
         }
 
     }
 
-    public List<VersionInfo> getAffectedVersion(@NotNull JSONArray versions){
+    public List<Version> getAffectedVersion(@NotNull JSONArray versions){
 
         String id;
-        List<VersionInfo> affectedVersions = new ArrayList<>();
+        List<Version> affectedVersions = new ArrayList<>();
 
         for(int i = 0; i < versions.length(); i++){
             if(versions.getJSONObject(i).has(RELEASE_DATE) && versions.getJSONObject(i).has("id")){
                     id = versions.getJSONObject(i).get(ID).toString();
-                    VersionInfo version = searchVersion(id);
+                    Version version = searchVersion(id);
                     if(version == null) throw new RuntimeException();
                     affectedVersions.add(version);
                 }
@@ -100,9 +101,9 @@ public class VersionRetriever {
 
     }
 
-    private @Nullable VersionInfo searchVersion(String id) {
+    private @Nullable Version searchVersion(String id) {
 
-        for(VersionInfo versionInfo: this.projectVersions){
+        for(Version versionInfo: this.projectVersions){
             if(Objects.equals(versionInfo.getId(), id)){
                 return versionInfo;
             }
@@ -110,11 +111,11 @@ public class VersionRetriever {
         return null;
     }
 
-    public List<VersionInfo> getProjectVersions(){
+    public List<Version> getProjectVersions(){
         return this.projectVersions;
     }
 
-    public void setProjectVersions(List<VersionInfo> projectVersions){
+    public void setProjectVersions(List<Version> projectVersions){
         this.projectVersions = projectVersions;
     }
 }

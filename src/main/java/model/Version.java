@@ -4,14 +4,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.LocalDate;
 
-public class VersionInfo {
+public class Version {
 
     private String id;
     private Integer index;
     private String name;
     private LocalDate date;
 
-    public VersionInfo(String id, String name,Integer index, @NotNull LocalDate date){
+    public Version(String id, String name, Integer index, @NotNull LocalDate date){
 
         this.id = id;
         this.name = name;
@@ -20,7 +20,7 @@ public class VersionInfo {
 
     }
 
-    public VersionInfo(String id, String name, @NotNull LocalDate date){
+    public Version(String id, String name, @NotNull LocalDate date){
 
         this.id = id;
         this.name = name;

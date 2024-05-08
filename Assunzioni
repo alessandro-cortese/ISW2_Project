@@ -4,4 +4,5 @@ Project Assumption:
 - I assume that tickets resolved on the same on the same day as the release of a new release are resolved in that release;
 - I calculate the fixedVersion as the version after the resolutionDate of the ticket on Jira;
 - I perform the proportion calculation on all known repositories, even those later than the version to which we are applying proportion;
-- I consider the release date of versions to sort them.
+- I consider the release date of versions to sort them;
+- If multiple tickets are mentioned in a commit, I consider the commit as resolving all the tickets mentioned.

@@ -11,7 +11,7 @@ import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import model.ReleaseCommits;
-import model.VersionInfo;
+import model.Version;
 import java.time.ZoneId;
 import java.util.ArrayList;
 
@@ -41,7 +41,7 @@ public class GitUtils {
         }
     }
 
-    public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, VersionInfo release, LocalDate firstDate) {
+    public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, Version release, LocalDate firstDate) {
 
         List<RevCommit> matchingCommits = new ArrayList<>();
         LocalDate lastDate = release.getDate();
@@ -50,7 +50,7 @@ public class GitUtils {
             LocalDate commitDate = commit.getCommitterIdent().getWhen().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
             //if firstDate < commitDate <= lastDate then add the commit in matchingCommits list
-            if(commitDate.isAfter(firstDate) && (commitDate.isBefore(lastDate) || commitDate.equals(lastDate))) {
+            if(commitDate.isAfter(firstDate) && (!commitDate.isAfter(lastDate))) {
                 matchingCommits.add(commit);
             }
 
