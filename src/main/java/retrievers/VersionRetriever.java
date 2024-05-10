@@ -23,6 +23,7 @@ public class VersionRetriever {
     private static final String RELEASE_DATE = "releaseDate";
     private static final String ID = "id";
     private static final String NAME = "name";
+
     public VersionRetriever(String projectName){
         try{
             getVersions(projectName);
@@ -44,6 +45,46 @@ public class VersionRetriever {
 
         setIndex(this.projectVersions);
 
+    }
+
+    private void setIndex(List<Version> projectVersions) {
+
+        int index = 0;
+        for(Version versionInfo: projectVersions){
+            versionInfo.setIndex(index);
+            index++;
+        }
+
+    }
+
+    public List<Version> getAffectedVersion(@NotNull JSONArray versions){
+
+        String id;
+        List<Version> affectedVersions = new ArrayList<>();
+
+        for(int i = 0; i < versions.length(); i++){
+            if(versions.getJSONObject(i).has(RELEASE_DATE) && versions.getJSONObject(i).has("id")){
+                id = versions.getJSONObject(i).get(ID).toString();
+                Version version = searchVersion(id);
+                if(version == null)
+                    throw new RuntimeException();
+                affectedVersions.add(version);
+            }
+
+        }
+
+        return affectedVersions;
+
+    }
+
+    private @Nullable Version searchVersion(String id) {
+
+        for(Version versionInfo: this.projectVersions){
+            if(Objects.equals(versionInfo.getId(), id)){
+                return versionInfo;
+            }
+        }
+        return null;
     }
 
     private @NotNull List<Version> createVersionArray(JSONArray jsonArrayVersion) {
@@ -71,44 +112,6 @@ public class VersionRetriever {
         Version newReleaseInfo = new Version(id, name, localDate);
         versionInfoArrayList.add(newReleaseInfo);
 
-    }
-    private void setIndex(List<Version> projectVersions) {
-
-        int index = 0;
-        for(Version versionInfo: projectVersions){
-            versionInfo.setIndex(index);
-            index++;
-        }
-
-    }
-
-    public List<Version> getAffectedVersion(@NotNull JSONArray versions){
-
-        String id;
-        List<Version> affectedVersions = new ArrayList<>();
-
-        for(int i = 0; i < versions.length(); i++){
-            if(versions.getJSONObject(i).has(RELEASE_DATE) && versions.getJSONObject(i).has("id")){
-                    id = versions.getJSONObject(i).get(ID).toString();
-                    Version version = searchVersion(id);
-                    if(version == null) throw new RuntimeException();
-                    affectedVersions.add(version);
-                }
-
-            }
-
-        return affectedVersions;
-
-    }
-
-    private @Nullable Version searchVersion(String id) {
-
-        for(Version versionInfo: this.projectVersions){
-            if(Objects.equals(versionInfo.getId(), id)){
-                return versionInfo;
-            }
-        }
-        return null;
     }
 
     public List<Version> getProjectVersions(){

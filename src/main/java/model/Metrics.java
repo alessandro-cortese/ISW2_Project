@@ -1,6 +1,8 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.List;
+
 public class Metrics {
 
     private final LOCMetrics addedLOCMetrics = new LOCMetrics();
@@ -8,8 +10,8 @@ public class Metrics {
     private final LOCMetrics churnLOCMetrics = new LOCMetrics();
     private boolean buggyness = false;
     private int size;
-    private List<Integer> addedLinesOfCodeList;
-    private List<Integer> deletedLinesOfCodeList;
+    private final List<Integer> addedLinesOfCodeList = new ArrayList<>();
+    private final List<Integer> deletedLinesOfCodeList = new ArrayList<>();
     private int fixedDefects = 0;
 
     public Metrics() {}
@@ -129,4 +131,5 @@ public class Metrics {
         private int loc;
         private double avgLoc;
     }
+
 }

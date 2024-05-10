@@ -21,9 +21,9 @@ public class ReleaseCommits {
         this.release = versionInfo;
         this.commits = commits;
         this.lastCommit = lastCommit;
+        this.javaClasses = null;
 
     }
-
 
     public Version getRelease() {
         return release;

@@ -20,9 +20,9 @@ public class TicketRetriever {
 
     private static final String FIELDS = "fields";
     private VersionRetriever versionRetriever;
+    private CommitRetriever commitRetriever;
     private List<Ticket> tickets;
     private boolean coldStart = false;
-    private CommitRetriever commitRetriever;
 
     public TicketRetriever(String projectName) {
         init(projectName);
@@ -92,13 +92,11 @@ public class TicketRetriever {
                 //Discard incorrect ticket or that are after the last release
                 if(ticket.getOpeningRelease() == null ||
                         (ticket.getInjectedRelease() != null &&
-                                (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())))
+                                (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())) ||
+                        ticket.getFixedRelease() == null)
                     continue;
                 //If the ticket doesn't have the fixed release, the ticket will be discarded
-                if(ticket.getFixedRelease() != null){
-                    System.out.println("Ticket key:" + ticket.getKey() + "; fixed release:  " + ticket.getFixedRelease().getIndex());
-                    addTicket(ticket, consistentTickets, inconsistentTickets);
-                }
+                addTicket(ticket, consistentTickets, inconsistentTickets);
 
             }
         } while (i < total);
@@ -138,7 +136,6 @@ public class TicketRetriever {
         }
 
     }
-
 
     private void fixTicket(Ticket ticket, double proportionValue){
 

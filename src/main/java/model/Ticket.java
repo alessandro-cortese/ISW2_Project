@@ -11,7 +11,7 @@ import java.util.List;
 
 public class Ticket {
 
-     private String key;
+    private String key;
     private LocalDate ticketCreationDate;
     private LocalDate ticketResolutionDate;
     private List<Version> affectedReleases;
@@ -50,10 +50,14 @@ public class Ticket {
     }
 
     public void setAssociatedCommits(List<RevCommit> associatedCommits){
+
         this.associatedCommits = associatedCommits;
-        if(associatedCommits.isEmpty()) return;
+
+        if(associatedCommits.isEmpty())
+            return;
 
         RevCommit revCommit = associatedCommits.get(0);
+
         for(RevCommit commit: associatedCommits){
             if(commit.getCommitterIdent().getWhen().after(revCommit.getCommitterIdent().getWhen())) revCommit = commit;
         }

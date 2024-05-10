@@ -4,7 +4,6 @@ public class ChangedJavaClass {
 
     private final String javaClassName;
 
-
     public ChangedJavaClass(String javaClass) {
         this.javaClassName = javaClass;
     }
@@ -12,6 +11,5 @@ public class ChangedJavaClass {
     public String getJavaClassName() {
         return javaClassName;
     }
-
 
 }

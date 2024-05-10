@@ -39,10 +39,21 @@ public class MetricsRetriever {
                         JavaClassUtil.updateJavaBuggyness(javaClass, releaseCommitsList, ticket.getAffectedReleases(), commit);
                     }
                 }
+
                 //For each ticket, update the number of fixed defects of classes present in the last commit of the ticket (the fixed commit).
                 List<ChangedJavaClass> classChangedList = commitRetriever.retrieveChanges(ticket.getLastCommit());
                 JavaClassUtil.updateNumberOfFixedDefects(versionRetriever, ticket.getLastCommit(), classChangedList, releaseCommitsList);
             }
+        }
+    }
+
+    public static void computeMetrics(List<ReleaseCommits> releaseCommitsList, CommitRetriever commitRetriever) {
+        //Add the size metric in all the classes of the release.
+        addSizeLabel(releaseCommitsList);
+        try {
+            computeLocData(releaseCommitsList, commitRetriever);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -53,11 +64,6 @@ public class MetricsRetriever {
                 computeLocAndChurnMetrics(javaClass);
             }
         }
-    }
-
-    public static void computeMetrics(List<ReleaseCommits> releaseCommitsList) {
-        //Add the size metric in all the classes of the release.
-        addSizeLabel(releaseCommitsList);
     }
 
     private static void computeLocAndChurnMetrics(JavaClass javaClass) {
@@ -72,7 +78,7 @@ public class MetricsRetriever {
         int maxDeletedLOC = 0;
         double avgDeletedLOC = 0;
 
-        for(int i=0; i<javaClass.getMetrics().getAddedLinesList().size(); i++) {
+        for(int i=0; i < javaClass.getMetrics().getAddedLinesList().size(); i++) {
 
             int currentLOC = javaClass.getMetrics().getAddedLinesList().get(i);
             int currentDeletedLOC = javaClass.getMetrics().getDeletedLinesList().get(i);

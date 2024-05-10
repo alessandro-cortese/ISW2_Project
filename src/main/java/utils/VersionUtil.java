@@ -7,6 +7,7 @@ import retrievers.VersionRetriever;
 import model.ReleaseCommits;
 import java.time.LocalDate;
 import java.util.List;
+
 public class VersionUtil {
 
     public static void printVersion(List<Version> versionList) {
@@ -28,6 +29,13 @@ public class VersionUtil {
         return null;
     }
 
+    /**
+     * Retrieve the ReleaseCommits in the rcList with version immediately after the parameter date.
+     * @param versionRetriever Project version retriever
+     * @param date Commit date; we use it for retrieve the version of the commit.
+     * @param rcList List of the project ReleaseCommits
+     * @return The ReleaseCommits with version immediately after the parameter date
+     */
     public static @Nullable ReleaseCommits retrieveCommitRelease(VersionRetriever versionRetriever, LocalDate date, @NotNull List<ReleaseCommits> rcList) {
         Version version = retrieveNextRelease(versionRetriever, date);
 

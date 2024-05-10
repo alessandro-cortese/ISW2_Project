@@ -19,28 +19,18 @@ public class GitUtils {
 
     private GitUtils() {}
 
-    public static Repository getRepository(String repoPath) {
-        try{
-            FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder();
-            return repositoryBuilder.setGitDir(new File(repoPath + "/.git")).build();
-        }catch (IOException e){
-            throw new RuntimeException(e);
-        }
-
-    }
-
     public static LocalDate castToLocalDate(Date date) {
         SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd");
         return LocalDate.parse(dateFormatter.format(date));
     }
 
-    public static void printCommit(List<RevCommit> commits){
-        for(RevCommit commit: commits){
-            System.out.println("Commit: " + commit.getAuthorIdent().getName());
-            System.out.println(commit.getFullMessage());
-        }
-    }
-
+    /**
+     * Create a ReleaseCommits of the version passed. Then, associate all commits that have firstDate < commitDate <= lastDate in the release, where the lastDate is the releasedDate of the version.
+     * @param commitsList List of the all commits in the project.
+     * @param release Version used to create the ReleaseCommits.
+     * @param firstDate The releasedDate of the previous version. For the first version use a lowerBoundDate.
+     * @return The ReleaseCommits created.
+     */
     public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, Version release, LocalDate firstDate) {
 
         List<RevCommit> matchingCommits = new ArrayList<>();
@@ -74,6 +64,23 @@ public class GitUtils {
             }
         }
         return lastCommit;
+    }
+
+    public static Repository getRepository(String repoPath) {
+        try{
+            FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder();
+            return repositoryBuilder.setGitDir(new File(repoPath + "/.git")).build();
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public static void printCommit(List<RevCommit> commits){
+        for(RevCommit commit: commits){
+            System.out.println("Commit: " + commit.getAuthorIdent().getName());
+            System.out.println(commit.getFullMessage());
+        }
     }
 
 }

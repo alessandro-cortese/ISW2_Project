@@ -73,11 +73,20 @@ public class CommitRetriever {
         return commits;
     }
 
+
+    /** Associate the tickets with the commits that reference them. Moreover, discard the tickets that don't have any commits.
+     *
+     * @param tickets: tickets list that must be associate to the relative commits
+     * @return the modified list
+     */
+
     public List<Ticket> associateTicketAndCommit(List<Ticket> tickets) {
 
         try {
             List<RevCommit> commits = this.retrieveCommit();
+
             for (Ticket ticket : tickets) {
+
                 List<RevCommit> associatedCommits = this.retrieveAssociatedCommits(commits, ticket);
                 List<RevCommit> consistentCommits = new ArrayList<>();
 
@@ -87,13 +96,14 @@ public class CommitRetriever {
                     //TODO controllare se i commit presi sono giusti -> controllare se le classi buggy sono giuste
                     if (!ticket.getFixedRelease().getDate().isBefore(when) && //commitDate <= fixedVersionDate
                             !ticket.getInjectedRelease().getDate().isAfter(when)) { //commitDate > injectedVersionDate
-                        consistentCommits.add(commit);
+                            consistentCommits.add(commit);
                     }
                 }
                 ticket.setAssociatedCommits(consistentCommits);
             }
             //Discard ticket that have no associated commits
             tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty());
+
         } catch (GitAPIException e) {
             throw new RuntimeException(e);
         }
@@ -106,15 +116,22 @@ public class CommitRetriever {
 
         List<ReleaseCommits> releaseCommits = new ArrayList<>();
         LocalDate lowerBound = LocalDate.of(1900, 1, 1);
+
         for (Version versionInfo : versionRetriever.getProjectVersions()) {
+
             ReleaseCommits releaseCommit = GitUtils.getCommitsOfRelease(commits, versionInfo, lowerBound);
+
             if (releaseCommit != null) {
+
                 List<JavaClass> javaClasses = getClasses(releaseCommit.getLastCommit());
                 releaseCommit.setJavaClasses(javaClasses);
                 releaseCommits.add(releaseCommit);
                 JavaClassUtil.updateJavaClassCommits(this, releaseCommit.getCommits(), javaClasses);
+
             }
+
             lowerBound = versionInfo.getDate();
+
         }
 
         return releaseCommits;
@@ -135,7 +152,8 @@ public class CommitRetriever {
                 //We are retrieving (name class, content class) couples
                 Version release = VersionUtil.retrieveNextRelease(versionRetriever, GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()));
 
-                if (release == null) throw new RuntimeException();
+                if (release == null)
+                    throw new RuntimeException();
 
                 javaClasses.add(new JavaClass(
                         treeWalk.getPathString(),
@@ -151,6 +169,7 @@ public class CommitRetriever {
     public List<ChangedJavaClass> retrieveChanges(RevCommit commit) {
 
         List<ChangedJavaClass> changedJavaClassList = new ArrayList<>();
+
         try {
 
             DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE);
@@ -214,7 +233,7 @@ public class CommitRetriever {
      * - List of numbers of deleted lines by each commit; every entry is associated to one specific commit
      * These lists will be used to calculate sum, max & avg*/
 
-    public void computeAddedAndDeletedLinesList(JavaClass javaClass) throws IOException {
+    public void computeAddedAndDeletedLinesList(@NotNull JavaClass javaClass) throws IOException {
 
         for(RevCommit comm : javaClass.getCommits()) {
             try(DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {

@@ -37,13 +37,13 @@ public class JavaClassUtil {
         for(JavaClass javaClass: javaClasses) {
             if(Objects.equals(javaClass.getName(), className.getJavaClassName())) {
                 javaClass.getMetrics().setClassBuggyness();
-
                 return;
             }
         }
     }
 
     public static void updateNumberOfFixedDefects(VersionRetriever versionRetriever, RevCommit lastCommit, List<ChangedJavaClass> classChangedList, List<ReleaseCommits> releaseCommitsList) {
+
         ReleaseCommits releaseCommits = VersionUtil.retrieveCommitRelease(
                 versionRetriever,
                 GitUtils.castToLocalDate(lastCommit.getCommitterIdent().getWhen()),
@@ -55,6 +55,7 @@ public class JavaClassUtil {
                 updateFixedDefects(releaseCommits, javaClass.getJavaClassName());
             }
         }
+
     }
 
     private static void updateFixedDefects(ReleaseCommits releaseCommits, String className) {
@@ -62,7 +63,6 @@ public class JavaClassUtil {
         for(JavaClass javaClass: releaseCommits.getJavaClasses()) {
             if(Objects.equals(javaClass.getName(), className)) {
                 javaClass.getMetrics().updateFixedDefects();
-
                 return;
             }
         }
@@ -72,7 +72,6 @@ public class JavaClassUtil {
 
         for(RevCommit commit: commits) {
             List<ChangedJavaClass> changedJavaClassList = commitRetriever.retrieveChanges(commit);
-
             for(ChangedJavaClass changedJavaClass: changedJavaClassList) {
                 for(JavaClass javaClass: javaClasses) {
                     if (Objects.equals(changedJavaClass.getJavaClassName(), javaClass.getName())) {
