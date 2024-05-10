@@ -2,7 +2,7 @@ Project Assumption:
 - I consider in the calculation of the value of proportion only the issues with OV != FV (otherwise the dominator would be 0);
 - I round th index of the injected release calculated with proportion by defect;
 - I assume that tickets resolved on the same on the same day as the release of a new release are resolved in that release;
-- I calculate the fixedVersion as the version after the resolutionDate of the ticket on Jira;
+- I calculate the fixed version as the version after the resolutionDate of the ticket and the opening version how the next version of createDate on Jira;
 - I perform the proportion calculation on all known repositories, even those later than the version to which we are applying proportion;
 - I consider the release date of versions to sort them;
 - If multiple tickets are mentioned in a commit, I consider the commit as resolving all the tickets mentioned.

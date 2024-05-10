@@ -10,16 +10,15 @@ public class JavaClass {
     private String content;
     private Version release;
     private List<RevCommit> commits = new ArrayList<>();
-    private Metrics metrics  = new Metrics();
+    private final Metrics metrics  = new Metrics();
+
     public JavaClass(String name, String content, Version release) {
 
         this.name = name;
         this.content = content;
         this.release = release;
 
-
     }
-
 
     public String getName() {
         return name;
@@ -61,7 +60,4 @@ public class JavaClass {
         return metrics;
     }
 
-    public void setMetrics(Metrics metrics) {
-        this.metrics = metrics;
-    }
 }

@@ -22,11 +22,12 @@ public class RunningExecution {
         CommitRetriever commitRetriever = ticketRetriever.getCommitRetriever();
 
         try{
+            System.out.println("\n" + projectName + " - NUMBER OF COMMIT: " + commitRetriever.retrieveCommit().size() + "\n");
             List<ReleaseCommits> releaseCommitsList = commitRetriever.getReleaseCommits(ticketRetriever.getVersionRetriever(), commitRetriever.retrieveCommit());
-            printReleaseCommit(projectName, releaseCommitsList);
-            MetricsRetriever.addBuggynessLabel(releaseCommitsList, tickets, commitRetriever, ticketRetriever.getVersionRetriever());
+            MetricsRetriever.computeBuggynessAndFixedDefects(releaseCommitsList, tickets, commitRetriever, ticketRetriever.getVersionRetriever());
             MetricsRetriever.computeMetrics(releaseCommitsList);
             FileCreator.writeOnCsv(projectName, releaseCommitsList, CsvNamesEnum.BUGGY, 0);
+            printReleaseCommit(projectName, releaseCommitsList);
         } catch (GitAPIException | IOException e) {
             throw new RuntimeException();
 
@@ -35,7 +36,10 @@ public class RunningExecution {
 ;
     private static void printReleaseCommit(String projectName, List<ReleaseCommits> releaseCommitsList) {
         for(ReleaseCommits rc: releaseCommitsList) {
-            System.out.println(projectName + " version: " + rc.getRelease().getName() + "; Commits: " + rc.getCommits().size() + "; Java classes: " + rc.getJavaClasses().size());
+            System.out.println(projectName + " version: " + rc.getRelease().getName() + ";" +
+                    " Commits: " + rc.getCommits().size() + ";" +
+                    " Java classes: " + rc.getJavaClasses().size() + ";" +
+                    " Buggy classes: " + rc.getBuggyClasses());
         }
     }
 

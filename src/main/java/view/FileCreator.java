@@ -26,7 +26,17 @@ public class FileCreator {
 
         try (FileWriter fw = new FileWriter(projName + csvNameStr + ".csv")) {
 
-            fw.write("VERSION_INDEX,JAVA_CLASS,SIZE,IS_BUGGY");
+            fw.write("VERSION," +
+                    "JAVA_CLASS," +
+                    "SIZE," +
+                    "LOC_ADDED," +
+                    "MAX_LOC_ADDED," +
+                    "AVG_LOC_ADDED," +
+                    "CHURN," +
+                    "MAX_CHURN," +
+                    "AVG_CHURN," +
+                    "IS_BUGGY");
+
 
             int count;
 
@@ -39,6 +49,12 @@ public class FileCreator {
                     fw.write(javaClass.getName() + ",");
                     fw.write(javaClass.getMetrics().getSize() + ",");
                     fw.write(javaClass.getMetrics().isBuggy());
+                    fw.write(javaClass.getMetrics().getLocAdded() + ",");
+                    fw.write(javaClass.getMetrics().getMaxLocAdded() + ",");
+                    fw.write(javaClass.getMetrics().getAvgLocAdded() + ",");
+                    fw.write(javaClass.getMetrics().getChurn() + ",");
+                    fw.write(javaClass.getMetrics().getMaxChurn() + ",");
+                    fw.write(javaClass.getMetrics().getAvgChurn() + ",");
                     /*cell1.setCellValue(javaClass.getRelease().getId());
                     cell2.setCellValue(javaClass.getSize());
                     cell3.setCellValue(javaClass.getNr());

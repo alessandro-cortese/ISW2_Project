@@ -107,7 +107,7 @@ public class TicketRetriever {
 
         discardInvalidTicket(consistentTickets);
 
-        commitRetriever = new CommitRetriever("/home/ales/Documents/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
+        commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
         return commitRetriever.associateTicketAndCommit(consistentTickets);
     }
 

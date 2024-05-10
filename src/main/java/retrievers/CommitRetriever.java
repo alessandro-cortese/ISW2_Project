@@ -9,9 +9,6 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectReader;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.util.io.DisabledOutputStream;
 import org.eclipse.jgit.diff.Edit;
 import org.eclipse.jgit.diff.RawTextComparator;
@@ -22,9 +19,10 @@ import org.jetbrains.annotations.Nullable;
 import utils.GitUtils;
 import utils.RegularExpression;
 import utils.VersionUtil;
+import utils.JavaClassUtil;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.*;
+import java.util.Comparator;
 import java.io.IOException;
 
 public class CommitRetriever {
@@ -41,15 +39,11 @@ public class CommitRetriever {
     }
 
 
-    public @Nullable List<RevCommit> retrieveAssociatedCommits(@NotNull List<RevCommit> commits, Ticket ticket) throws GitAPIException{
-
-        Iterable<RevCommit> commitIterable = git.log().call();
-        for(RevCommit commit: commitIterable)
-            commits.add(commit);
+    public @Nullable List<RevCommit> retrieveAssociatedCommits(@NotNull List<RevCommit> commits, Ticket ticket) throws GitAPIException {
 
         List<RevCommit> associatedCommit = new ArrayList<>();
-        for(RevCommit commit: commits){
-            if(RegularExpression.matchRegex(commit.getFullMessage(), ticket.getKey())){
+        for (RevCommit commit : commits) {
+            if (RegularExpression.matchRegex(commit.getFullMessage(), ticket.getKey())) {
                 associatedCommit.add(commit);
             }
         }
@@ -57,14 +51,17 @@ public class CommitRetriever {
     }
 
     public List<RevCommit> retrieveCommit() throws GitAPIException {
-        if(commitList != null) return commitList;
+
+        if (commitList != null) return commitList;
+
         Iterable<RevCommit> commitIterable = git.log().call();
 
         List<RevCommit> commits = new ArrayList<>();
         List<Version> projectVersion = versionRetriever.getProjectVersions();
         Version lastVersion = projectVersion.get(projectVersion.size() - 1);
-        for(RevCommit commit: commitIterable) {
-            if(!GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()).isAfter(lastVersion.getDate())) {
+
+        for (RevCommit commit : commitIterable) {
+            if (!GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()).isAfter(lastVersion.getDate())) {
                 commits.add(commit);
             }
         }
@@ -77,56 +74,45 @@ public class CommitRetriever {
     }
 
     public List<Ticket> associateTicketAndCommit(List<Ticket> tickets) {
+
         try {
             List<RevCommit> commits = this.retrieveCommit();
             for (Ticket ticket : tickets) {
                 List<RevCommit> associatedCommits = this.retrieveAssociatedCommits(commits, ticket);
-                ticket.setAssociatedCommits(associatedCommits);
-                //GitUtils.printCommit(associatedCommits);
+                List<RevCommit> consistentCommits = new ArrayList<>();
+
+                for (RevCommit commit : associatedCommits) {
+                    LocalDate when = GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen());
+
+                    //TODO controllare se i commit presi sono giusti -> controllare se le classi buggy sono giuste
+                    if (!ticket.getFixedRelease().getDate().isBefore(when) && //commitDate <= fixedVersionDate
+                            !ticket.getInjectedRelease().getDate().isAfter(when)) { //commitDate > injectedVersionDate
+                        consistentCommits.add(commit);
+                    }
+                }
+                ticket.setAssociatedCommits(consistentCommits);
             }
+            //Discard ticket that have no associated commits
             tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty());
         } catch (GitAPIException e) {
             throw new RuntimeException(e);
         }
+
         return tickets;
-    }
 
-    public List<ChangedJavaClass> retrieveChanges(RevCommit commit) {
-
-        List<ChangedJavaClass> changedJavaClassList = new ArrayList<>();
-        try {
-            ObjectReader reader = git.getRepository().newObjectReader();
-            CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
-            ObjectId oldTree = git.getRepository().resolve(commit.getName() + "~1^{tree}");
-            oldTreeIter.reset(reader, oldTree);
-            CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
-            ObjectId newTree = git.getRepository().resolve(commit.getName() + "^{tree}");
-            newTreeIter.reset(reader, newTree);
-
-            DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE);
-            diffFormatter.setRepository(git.getRepository());
-            List<DiffEntry> entries = diffFormatter.scan(oldTreeIter, newTreeIter);
-
-            for (DiffEntry entry : entries) {
-                ChangedJavaClass newJavaClassChange = new ChangedJavaClass(entry.getNewPath(), entry.getChangeType().toString());
-                changedJavaClassList.add(newJavaClassChange);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        return changedJavaClassList;
     }
 
     public List<ReleaseCommits> getReleaseCommits(VersionRetriever versionRetriever, List<RevCommit> commits) throws GitAPIException, IOException {
+
         List<ReleaseCommits> releaseCommits = new ArrayList<>();
         LocalDate lowerBound = LocalDate.of(1900, 1, 1);
-        for(Version versionInfo: versionRetriever.getProjectVersions()) {
+        for (Version versionInfo : versionRetriever.getProjectVersions()) {
             ReleaseCommits releaseCommit = GitUtils.getCommitsOfRelease(commits, versionInfo, lowerBound);
-            if(releaseCommit != null) {
+            if (releaseCommit != null) {
                 List<JavaClass> javaClasses = getClasses(releaseCommit.getLastCommit());
                 releaseCommit.setJavaClasses(javaClasses);
                 releaseCommits.add(releaseCommit);
+                JavaClassUtil.updateJavaClassCommits(this, releaseCommit.getCommits(), javaClasses);
             }
             lowerBound = versionInfo.getDate();
         }
@@ -138,18 +124,18 @@ public class CommitRetriever {
 
         List<JavaClass> javaClasses = new ArrayList<>();
 
-        RevTree tree = commit.getTree();	                    //We get the tree of the files and the directories that were belong to the repository when commit was pushed
+        RevTree tree = commit.getTree();                        //We get the tree of the files and the directories that were belong to the repository when commit was pushed
         TreeWalk treeWalk = new TreeWalk(this.repository);      //We use a TreeWalk to iterate over all files in the Tree recursively
         treeWalk.addTree(tree);
         treeWalk.setRecursive(true);
 
-        while(treeWalk.next()) {
+        while (treeWalk.next()) {
             //We are keeping only Java classes that are not involved in tests
-            if(treeWalk.getPathString().contains(".java") && !treeWalk.getPathString().contains("/test/")) {
+            if (treeWalk.getPathString().contains(".java") && !treeWalk.getPathString().contains("/test/")) {
                 //We are retrieving (name class, content class) couples
                 Version release = VersionUtil.retrieveNextRelease(versionRetriever, GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()));
 
-                if(release == null) throw new RuntimeException();
+                if (release == null) throw new RuntimeException();
 
                 javaClasses.add(new JavaClass(
                         treeWalk.getPathString(),
@@ -157,16 +143,77 @@ public class CommitRetriever {
                         release));
             }
         }
+
         treeWalk.close();
-
         return javaClasses;
-
     }
 
-    /*This method initializes two lists:
+    public List<ChangedJavaClass> retrieveChanges(RevCommit commit) {
+
+        List<ChangedJavaClass> changedJavaClassList = new ArrayList<>();
+        try {
+
+            DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE);
+
+            RevCommit parentComm = commit.getParent(0);
+
+            diffFormatter.setRepository(this.repository);
+            diffFormatter.setDiffComparator(RawTextComparator.DEFAULT);
+
+            List<DiffEntry> entries = diffFormatter.scan(parentComm.getTree(), commit.getTree());
+
+            for (DiffEntry entry : entries) {
+
+                ChangedJavaClass newJavaClassChange = new ChangedJavaClass(entry.getNewPath());
+                changedJavaClassList.add(newJavaClassChange);
+
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            //commit has no parents: this is the first commit, so add all classes
+            try {
+                List<JavaClass> javaClasses = getClasses(commit);
+                changedJavaClassList = JavaClassUtil.createChangedJavaClass(javaClasses);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        return changedJavaClassList;
+    }
+
+    public String getContentOfClassByCommit(String className, RevCommit commit) throws IOException {
+
+        RevTree tree = commit.getTree();
+        // Tree walk to iterate over all files in the Tree recursively
+
+        TreeWalk treeWalk = new TreeWalk(this.repository);
+
+        treeWalk.addTree(tree);
+
+        treeWalk.setRecursive(true);
+
+        while (treeWalk.next()) {
+            // We are keeping only Java classes that are not involved in tests
+            if (treeWalk.getPathString().equals(className)) {
+                String content = new String(this.repository.open(treeWalk.getObjectId(0)).getBytes(), StandardCharsets.UTF_8);
+                treeWalk.close();
+                return content;
+            }
+        }
+
+        treeWalk.close();
+        // If here it mean no class with name className is present
+        return null;
+    }
+
+
+    /**This method initializes two lists:
      * - List of numbers of added lines by each commit; every entry is associated to one specific commit
      * - List of numbers of deleted lines by each commit; every entry is associated to one specific commit
      * These lists will be used to calculate sum, max & avg*/
+
     public void computeAddedAndDeletedLinesList(JavaClass javaClass) throws IOException {
 
         for(RevCommit comm : javaClass.getCommits()) {
@@ -180,28 +227,24 @@ public class CommitRetriever {
                 List<DiffEntry> diffs = diffFormatter.scan(parentComm.getTree(), comm.getTree());
                 for(DiffEntry entry : diffs) {
                     if(entry.getNewPath().equals(javaClass.getName())) {
+                        int n = getAddedLines(diffFormatter, entry);
                         javaClass.getMetrics().getAddedLinesList().add(getAddedLines(diffFormatter, entry));
                         javaClass.getMetrics().getDeletedLinesList().add(getDeletedLines(diffFormatter, entry));
-
+                        break;
                     }
-
                 }
 
             } catch(ArrayIndexOutOfBoundsException e) {
                 //commit has no parents: skip this commit, return an empty list and go on
-
             }
-
         }
-
-
     }
 
     private int getAddedLines(DiffFormatter diffFormatter, DiffEntry entry) throws IOException {
 
         int addedLines = 0;
         for(Edit edit : diffFormatter.toFileHeader(entry).toEditList()) {
-            addedLines += edit.getEndA() - edit.getBeginA();
+            addedLines += edit.getEndB() - edit.getBeginB();
         }
         return addedLines;
 
@@ -211,7 +254,7 @@ public class CommitRetriever {
 
         int deletedLines = 0;
         for (Edit edit : diffFormatter.toFileHeader(entry).toEditList()) {
-            deletedLines += edit.getEndB() - edit.getBeginB();
+            deletedLines += edit.getEndA() - edit.getBeginA();
         }
         return deletedLines;
     }

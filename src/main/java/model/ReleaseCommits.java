@@ -10,6 +10,8 @@ public class ReleaseCommits {
     private List<RevCommit> commits;
     private RevCommit lastCommit;
     private List<JavaClass> javaClasses;
+    private int buggyClasses;
+
     //Classes that were present when the release was deployed;
     //they are represented by their name and their content.
 
@@ -53,5 +55,13 @@ public class ReleaseCommits {
 
     public void setJavaClasses(List<JavaClass> javaClasses) {
         this.javaClasses = javaClasses;
+    }
+
+    public int getBuggyClasses() {
+        return buggyClasses;
+    }
+
+    public void setBuggyClasses(int buggyClasses) {
+        this.buggyClasses = buggyClasses;
     }
 }
