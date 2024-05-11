@@ -77,10 +77,9 @@ public class CommitRetriever {
     /** Associate the tickets with the commits that reference them. Moreover, discard the tickets that don't have any commits.
      *
      * @param tickets: tickets list that must be associate to the relative commits
-     * @return the modified list
      */
 
-    public List<Ticket> associateTicketAndCommit(List<Ticket> tickets) {
+    public void associateTicketAndCommit(List<Ticket> tickets) {
 
         try {
             List<RevCommit> commits = this.retrieveCommit();
@@ -107,8 +106,6 @@ public class CommitRetriever {
         } catch (GitAPIException e) {
             throw new RuntimeException(e);
         }
-
-        return tickets;
 
     }
 

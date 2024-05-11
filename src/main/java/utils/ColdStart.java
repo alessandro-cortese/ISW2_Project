@@ -11,14 +11,9 @@ public class ColdStart {
 
     private ColdStart() {}
 
-    public static List<Ticket> coldStart(){
-        List<Ticket> consistentTicket = new ArrayList<>();
-        for(ProjectsEnum projectsEnum: ProjectsEnum.values()){
-            TicketRetriever retriever = new TicketRetriever(projectsEnum.name(), true);
-            consistentTicket.addAll(retriever.getTickets());
-        }
-
-        return consistentTicket;
+    public static List<Ticket> getTicketForColdStart(ProjectsEnum project){
+        TicketRetriever retriever = new TicketRetriever(project.toString(), true);
+        return new ArrayList<>(retriever.getTickets());
     }
 
 }

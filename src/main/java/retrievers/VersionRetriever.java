@@ -27,7 +27,7 @@ public class VersionRetriever {
     public VersionRetriever(String projectName){
         try{
             getVersions(projectName);
-            VersionUtil.printVersion(projectVersions);
+            //VersionUtil.printVersion(projectVersions);
         }catch (IOException e){
             throw new RuntimeException(e);
         }

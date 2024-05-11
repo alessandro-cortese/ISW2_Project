@@ -42,18 +42,24 @@ public class JavaClassUtil {
         }
     }
 
-    public static void updateNumberOfFixedDefects(VersionRetriever versionRetriever, RevCommit lastCommit, @NotNull List<ChangedJavaClass> classChangedList, List<ReleaseCommits> releaseCommitsList) {
+    public static void updateNumberOfFixedDefects(VersionRetriever versionRetriever, @NotNull List<RevCommit> commits,  List<ReleaseCommits> releaseCommitsList, CommitRetriever commitRetriever) {
 
-        ReleaseCommits releaseCommits = VersionUtil.retrieveCommitRelease(
-                versionRetriever,
-                GitUtils.castToLocalDate(lastCommit.getCommitterIdent().getWhen()),
-                releaseCommitsList);
+        for(RevCommit commit: commits){
 
-        if (releaseCommits != null) {
+            List<ChangedJavaClass> classChangedList = commitRetriever.retrieveChanges(commit);
+            ReleaseCommits releaseCommits = VersionUtil.retrieveCommitRelease(
+                    versionRetriever,
+                    GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()),
+                    releaseCommitsList);
 
-            for (ChangedJavaClass javaClass : classChangedList) {
-                updateFixedDefects(releaseCommits, javaClass.getJavaClassName());
+            if (releaseCommits != null) {
+
+                for (ChangedJavaClass javaClass : classChangedList) {
+                    updateFixedDefects(releaseCommits, javaClass.getJavaClassName());
+                }
+
             }
+
         }
 
     }

@@ -5,4 +5,5 @@ Project Assumption:
 - I calculate the fixed version as the version after the resolutionDate of the ticket and the opening version how the next version of createDate on Jira;
 - I perform the proportion calculation on all known repositories, even those later than the version to which we are applying proportion;
 - I consider the release date of versions to sort them;
-- If multiple tickets are mentioned in a commit, I consider the commit as resolving all the tickets mentioned.
+- If multiple tickets are mentioned in a commit, I consider the commit as resolving all the tickets mentioned;
+- I calculate the incremental proportion value using all the tickets prior to the ticket I am considering.

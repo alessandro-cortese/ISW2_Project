@@ -32,9 +32,13 @@ public class RunningExecution {
             List<ReleaseCommits> releaseCommitsList = commitRetriever.getReleaseCommits(ticketRetriever.getVersionRetriever(), commitRetriever.retrieveCommit());
 
             MetricsRetriever.computeBuggynessAndFixedDefects(releaseCommitsList, tickets, commitRetriever, ticketRetriever.getVersionRetriever());
-            MetricsRetriever.computeMetrics(releaseCommitsList, commitRetriever);
+            MetricsRetriever.computeMetrics(releaseCommitsList, tickets, commitRetriever, ticketRetriever.getVersionRetriever());
 
             FileCreator.writeOnCsv(projectName, releaseCommitsList, CsvNamesEnum.BUGGY, 0);
+
+            for(ReleaseCommits commits : releaseCommitsList){
+                //Leave this here for now
+            }
 
             printReleaseCommit(projectName, releaseCommitsList);
 

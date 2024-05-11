@@ -13,7 +13,7 @@ public class Metrics {
     private final List<Integer> addedLinesOfCodeList = new ArrayList<>();
     private final List<Integer> deletedLinesOfCodeList = new ArrayList<>();
     private int fixedDefects = 0;
-
+    private int nAuth;
 
     public void setClassBuggyness() {
         this.buggyness = true;
@@ -123,6 +123,14 @@ public class Metrics {
 
     public void updateFixedDefects() {
         this.fixedDefects = fixedDefects + 1;
+    }
+
+    public int getnAuth() {
+        return nAuth;
+    }
+
+    public void setnAuth(int nAuth) {
+        this.nAuth = nAuth;
     }
 
     private static class LOCMetrics {
