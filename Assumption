@@ -1,9 +1,9 @@
 Project Assumption:
-- I consider in the calculation of the value of proportion only the issues with OV != FV (otherwise the dominator would be 0);
+- I perform the calculation of proportion by considering the denominator of the formula equal to 1 in the case where the issues have OV == FV;
 - I round th index of the injected release calculated with proportion by defect;
 - I assume that tickets resolved on the same on the same day as the release of a new release are resolved in that release;
 - I calculate the fixed version as the version after the resolutionDate of the ticket and the opening version how the next version of createDate on Jira;
-- I perform the proportion calculation on all known repositories, even those later than the version to which we are applying proportion;
-- I consider the release date of versions to sort them;
+- To sort versions I take their release date as a reference;
 - If multiple tickets are mentioned in a commit, I consider the commit as resolving all the tickets mentioned;
-- I calculate the incremental proportion value using all the tickets prior to the ticket I am considering.
+- I calculate the incremental proportion value using all valid tickets prior to the ticket I am considering. A ticket is valid if it has iv < ov < fv;
+- Empty or comment LOCs are also considered in the calculation of LOCs.

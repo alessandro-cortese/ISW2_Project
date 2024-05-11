@@ -1,19 +1,18 @@
 package main;
 
 import enums.FilenamesEnum;
+import model.ClassifierEvaluation;
 import model.ReleaseInfo;
 import model.Ticket;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jetbrains.annotations.NotNull;
-import retrievers.CommitRetriever;
-import retrievers.MetricsRetriever;
-import retrievers.TicketRetriever;
-import retrievers.VersionRetriever;
+import retrievers.*;
 import utils.TicketUtils;
 import view.FileCreator;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class RunningExecution {
 
@@ -38,17 +37,18 @@ public class RunningExecution {
             List<ReleaseInfo> releaseInfoList = discardHalfReleases(allTheReleaseInfo);
             printReleaseInfo(projectName, allTheReleaseInfo);
 
-            //--------------------------------- WALK FORWARD ---------------------------------
+            //----------------------------------------------------------- WALK FORWARD -----------------------------------------------------------
 
             List<ReleaseInfo> releaseInfoListHalved = discardHalfReleases(allTheReleaseInfo);
 
-            //TODO dobbiamo ignorare il caso in cui non abbiamo training set?
+            System.out.println("Number of tickets: " + tickets.size());
+            TicketUtils.printTickets(tickets);
+
             //Iterate starting by 1 so that the walk forward starts from using at least one training set.
             for(int i = 1; i < releaseInfoListHalved.size(); i++) {
                 //Selection of the tickets opened until the i-th release.
                 List<Ticket> ticketsUntilRelease = TicketUtils.getTicketsUntilRelease(tickets, i);
 
-                //TODO rifare il calcolo della buggyness soltanto per i set di training oppure anche quello di testing?
                 //Non viene aggiornata la buggyness del testing set
                 MetricsRetriever.computeBuggyness(releaseInfoListHalved.subList(0, i), ticketsUntilRelease, commitRetriever, versionRetriever);
 
@@ -58,8 +58,13 @@ public class RunningExecution {
                 FileCreator.writeOnArff(projectName, testingRelease, FilenamesEnum.TESTING, i);
             }
 
+            WekaInfoRetriever wekaInfoRetriever = new WekaInfoRetriever(projectName, allTheReleaseInfo.size()/2);
+            List<ClassifierEvaluation> classifierEvaluationList = wekaInfoRetriever.retrieveClassifiersEvaluation(projectName);
+            FileCreator.writeEvaluationDataOnCsv(projectName, classifierEvaluationList);
 
         } catch (GitAPIException | IOException e) {
+            throw new RuntimeException();
+        } catch (Exception e) {
             throw new RuntimeException();
         }
     }
@@ -77,6 +82,7 @@ public class RunningExecution {
             Integer i2 = o2.getRelease().getIndex();
             return i1.compareTo(i2);
         });
+
 
         return releaseInfoList.subList(0, n/2+1);
     }

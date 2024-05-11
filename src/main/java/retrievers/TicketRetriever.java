@@ -115,7 +115,9 @@ public class TicketRetriever {
             consistentTickets.sort(Comparator.comparing(Ticket::getTicketResolutionDate));
             adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
             consistentTickets.sort(Comparator.comparing(Ticket::getTicketResolutionDate));
-            commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
+            if(commitRetriever == null){
+                commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
+            }
             commitRetriever.associateTicketAndCommit(consistentTickets);
         }
 
@@ -125,7 +127,7 @@ public class TicketRetriever {
     }
 
     /**Discard tickets that have OV > FV or that have IV=OV*/
-    private void discardInvalidTicket(ArrayList<Ticket> tickets) {
+    private void discardInvalidTicket(@NotNull ArrayList<Ticket> tickets) {
         tickets.removeIf(ticket -> ticket.getOpeningRelease().getIndex() > ticket.getFixedRelease().getIndex() ||   //Discard if OV > FV
                 ticket.getInjectedRelease().getIndex() >= ticket.getOpeningRelease().getIndex() ||
                 (ticket.getOpeningRelease() == null || ticket.getFixedRelease() == null)); //Discard if IV >= OV
@@ -135,18 +137,32 @@ public class TicketRetriever {
     private void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) {
 
         List<Ticket> ticketForProportion = new ArrayList<>();
+        List<Ticket> allTickets = new ArrayList<>();
+
+        allTickets.addAll(inconsistentTickets);
+        allTickets.addAll(consistentTickets);
+
+        allTickets.sort(Comparator.comparing(Ticket::getTicketResolutionDate));
+
         double oldValue = 0;
-        for(Ticket ticket: inconsistentTickets){
-            double proportionValue = incrementalProportion(ticketForProportion);
-            if(oldValue != proportionValue){
-                oldValue = proportionValue;
+        for(Ticket ticket: allTickets){
+            double proportionValue;
+            if(inconsistentTickets.contains(ticket)){
+                proportionValue = incrementalProportion(ticketForProportion);
+                /*if(oldValue != proportionValue){
+                    System.out.println(proportionValue);
+                }
+                oldValue = proportionValue;*/
+                fixTicket(ticket, proportionValue);
+            } else if (consistentTickets.contains(ticket)) {
+                if (Proportion.isAValidTicketForProportion(ticket)) ticketForProportion.add(ticket);
             }
-            fixTicket(ticket, proportionValue);
             if(!isNotConsistent(ticket)){
                 throw new RuntimeException();
             }
-            consistentTickets.add(ticket);
-            if(Proportion.isAValidTicketForProportion(ticket)) ticketForProportion.add(ticket);
+            if(!consistentTickets.add(ticket)) {
+                consistentTickets.add(ticket);
+            }
         }
     }
 
@@ -174,23 +190,27 @@ public class TicketRetriever {
         }
 
         if(newIndex < 0){
-            ticket.setInjectedRelease(versionRetriever.getProjectVersions().get(0));
-            return;
+            newIndex = 0;
         }
         ticket.setInjectedRelease(versionRetriever.getProjectVersions().get(newIndex));
 
     }
 
-    //Check that tickets is consistent; if it isn't, the ticket will add to inconsistent ticket.
-    private static void addTicket(Ticket ticket, ArrayList<Ticket> consistentTicket, ArrayList<Ticket> inconsistentTicket){
+    /**
+     * Check that the ticket is consistent. If it isn't, the ticket will add to inconsistency tickets.
+     * @param ticket Ticket to add to the correct list.
+     * @param consistentTickets Consistent ticket list where adding consistent ticket.
+     * @param inconsistentTickets Inconsistent ticket list where adding inconsistent ticket.
+     */
+    private static void addTicket(Ticket ticket, ArrayList<Ticket> consistentTickets, ArrayList<Ticket> inconsistentTickets){
 
         // IV <= OV <= FV, IV = AV[0]
         // If condition is false, we have an inconsistency ticket
 
         if(!isNotConsistent(ticket))
-            inconsistentTicket.add(ticket);
+            inconsistentTickets.add(ticket);
         else
-            consistentTicket.add(ticket);
+            consistentTickets.add(ticket);
 
     }
 
