@@ -4,11 +4,11 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.util.List;
 
-public class ReleaseCommits {
+public class ReleaseInfo {
 
-    private Version release;
-    private List<RevCommit> commits;
-    private RevCommit lastCommit;
+    private final Version release;
+    private final List<RevCommit> commits;
+    private final RevCommit lastCommit;
     private List<JavaClass> javaClasses;
     private int buggyClasses;
 
@@ -16,7 +16,7 @@ public class ReleaseCommits {
     //they are represented by their name and their content.
 
 
-    public ReleaseCommits(Version versionInfo, List<RevCommit> commits, RevCommit lastCommit){
+    public ReleaseInfo(Version versionInfo, List<RevCommit> commits, RevCommit lastCommit){
 
         this.release = versionInfo;
         this.commits = commits;
@@ -29,24 +29,14 @@ public class ReleaseCommits {
         return release;
     }
 
-    public void setRelease(Version release) {
-        this.release = release;
-    }
 
     public List<RevCommit> getCommits() {
         return commits;
     }
 
-    public void setCommits(List<RevCommit> commits) {
-        this.commits = commits;
-    }
 
     public RevCommit getLastCommit() {
         return lastCommit;
-    }
-
-    public void setLastCommit(RevCommit lastCommit) {
-        this.lastCommit = lastCommit;
     }
 
     public List<JavaClass> getJavaClasses() {

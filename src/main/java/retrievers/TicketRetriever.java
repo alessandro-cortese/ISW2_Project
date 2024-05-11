@@ -103,6 +103,7 @@ public class TicketRetriever {
         if(!coldStart) {
             consistentTickets.sort(Comparator.comparing(Ticket::getTicketResolutionDate));
             adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
+            consistentTickets.sort(Comparator.comparing(Ticket::getTicketResolutionDate));
             commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
             commitRetriever.associateTicketAndCommit(consistentTickets);
         }

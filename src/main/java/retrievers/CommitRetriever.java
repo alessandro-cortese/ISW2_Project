@@ -109,14 +109,14 @@ public class CommitRetriever {
 
     }
 
-    public List<ReleaseCommits> getReleaseCommits(VersionRetriever versionRetriever, List<RevCommit> commits) throws IOException {
+    public List<ReleaseInfo> getReleaseCommits(VersionRetriever versionRetriever, List<RevCommit> commits) throws IOException {
 
-        List<ReleaseCommits> releaseCommits = new ArrayList<>();
+        List<ReleaseInfo> releaseCommits = new ArrayList<>();
         LocalDate lowerBound = LocalDate.of(1900, 1, 1);
 
         for (Version versionInfo : versionRetriever.getProjectVersions()) {
 
-            ReleaseCommits releaseCommit = GitUtils.getCommitsOfRelease(commits, versionInfo, lowerBound);
+            ReleaseInfo releaseCommit = GitUtils.getCommitsOfRelease(commits, versionInfo, lowerBound);
 
             if (releaseCommit != null) {
 

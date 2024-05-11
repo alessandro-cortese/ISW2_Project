@@ -2,7 +2,7 @@ package view;
 
 import enums.CsvNamesEnum;
 import model.JavaClass;
-import model.ReleaseCommits;
+import model.ReleaseInfo;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -24,7 +24,7 @@ public class FileCreator {
 
     }
 
-    public static void writeOnCsv(String projName, List<ReleaseCommits> rcList, CsvNamesEnum csvEnum, int csvIndex) throws IOException {
+    public static void writeOnCsv(String projName, List<ReleaseInfo> rcList, CsvNamesEnum csvEnum, int csvIndex) throws IOException {
 
         String csvNameStr = enumToString(csvEnum, csvIndex);
 
@@ -58,7 +58,7 @@ public class FileCreator {
 
             int count;
 
-            for (ReleaseCommits rc : rcList) {
+            for (ReleaseInfo rc : rcList) {
                 count = 0;
                 for (JavaClass javaClass : rc.getJavaClasses()) {
                     fw.write("\n");

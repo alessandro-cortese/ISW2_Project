@@ -22,8 +22,15 @@ public class TicketUtils {
         }
     }
 
-    public static void sortTickets(@NotNull List<Ticket> tickets) {
-        tickets.sort(Comparator.comparing(Ticket::getTicketCreationDate));
+    public static List<Ticket> getTicketsUntilRelease(List<Ticket> tickets, int versionBound) {
+        List<Ticket> ticketList = new ArrayList<>();
+        for(Ticket ticket: tickets) {
+            if(ticket.getFixedRelease().getIndex() <= versionBound) {
+                ticketList.add(ticket);
+            }
+        }
+
+        return ticketList;
     }
 
     public static @NotNull List<RevCommit> getAssociatedCommit(@NotNull List<Ticket> tickets) {

@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
-import model.ReleaseCommits;
+import model.ReleaseInfo;
 import model.Version;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -31,7 +31,7 @@ public class GitUtils {
      * @param firstDate The releasedDate of the previous version. For the first version use a lowerBoundDate.
      * @return The ReleaseCommits created.
      */
-    public static ReleaseCommits getCommitsOfRelease(List<RevCommit> commitsList, Version release, LocalDate firstDate) {
+    public static ReleaseInfo getCommitsOfRelease(List<RevCommit> commitsList, Version release, LocalDate firstDate) {
 
         List<RevCommit> matchingCommits = new ArrayList<>();
         LocalDate lastDate = release.getDate();
@@ -50,7 +50,7 @@ public class GitUtils {
 
         RevCommit lastCommit = getLastCommit(matchingCommits);
 
-        return new ReleaseCommits(release, matchingCommits, lastCommit);
+        return new ReleaseInfo(release, matchingCommits, lastCommit);
 
     }
 
