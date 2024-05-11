@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class VersionRetriever {
 
@@ -27,7 +28,6 @@ public class VersionRetriever {
     public VersionRetriever(String projectName){
         try{
             getVersions(projectName);
-            //VersionUtil.printVersion(projectVersions);
         }catch (IOException e){
             throw new RuntimeException(e);
         }
@@ -56,7 +56,9 @@ public class VersionRetriever {
         }
 
     }
-
+    /**
+     * Get version info from issues.
+     * */
     public List<Version> getAffectedVersion(@NotNull JSONArray versions){
 
         String id;
@@ -67,7 +69,7 @@ public class VersionRetriever {
                 id = versions.getJSONObject(i).get(ID).toString();
                 Version version = searchVersion(id);
                 if(version == null)
-                    throw new RuntimeException();
+                    continue;
                 affectedVersions.add(version);
             }
         }
@@ -104,6 +106,19 @@ public class VersionRetriever {
         }
 
         return versionInfoArrayList;
+    }
+
+    public void deleteVersionWithoutCommits() {
+
+        projectVersions.removeIf(Version::isCommitListEmpty);
+
+        projectVersions.sort(Comparator.comparing(Version::getDate));
+        int i = 0;
+        for (Version v : projectVersions) {
+            v.setIndex(i);
+            i++;
+        }
+
     }
 
     private void addRelease(String date, String name, String id, List<Version> versionInfoArrayList) {

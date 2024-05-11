@@ -1,6 +1,7 @@
 package retrievers;
 
 import model.Ticket;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import model.Version;
@@ -23,10 +24,26 @@ public class TicketRetriever {
     private List<Ticket> tickets;
     private boolean coldStart = false;
 
+    /**
+     * This is the constructor that you have to use for retrieve tickets without applying cold start.
+     * @param projectName The project name from which retrieve tickets.
+     */
     public TicketRetriever(String projectName) {
         init(projectName);
+        try {
+            commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
+            commitRetriever.associateCommitAndVersion(versionRetriever.getProjectVersions()); //Association of commits and versions and deletion of the version without commits
+            VersionUtil.printVersion(versionRetriever.getProjectVersions());
+        } catch (GitAPIException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    /**
+     * This is the constructor that you have to use for retrieve tickets applying cold start.
+     * @param projectName The project name from which retrieve tickets.
+     * @param coldStart The value used to specifying that you are using cold start. Must be true.
+     */
     public TicketRetriever(String projectName, boolean coldStart) {
         this.coldStart = coldStart;
         init(projectName);
@@ -40,13 +57,7 @@ public class TicketRetriever {
 
         try {
             versionRetriever = new VersionRetriever(projectName);
-            tickets = retrieveBugTickets(projectName, issueType, state, resolution);/*
-            System.out.println("Ticket extract from " + projectName + "; " + tickets.size());
-            int count = 0;
-            for(Ticket ticket: tickets){
-                count += ticket.getAssociatedCommits().size();
-            }
-            System.out.println("Commits associated to ticket extract from: " + projectName + ": " + count);*/
+            tickets = retrieveBugTickets(projectName, issueType, state, resolution);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -124,9 +135,12 @@ public class TicketRetriever {
     private void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) {
 
         List<Ticket> ticketForProportion = new ArrayList<>();
-
+        double oldValue = 0;
         for(Ticket ticket: inconsistentTickets){
             double proportionValue = incrementalProportion(ticketForProportion);
+            if(oldValue != proportionValue){
+                oldValue = proportionValue;
+            }
             fixTicket(ticket, proportionValue);
             if(!isNotConsistent(ticket)){
                 throw new RuntimeException();

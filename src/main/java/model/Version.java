@@ -1,7 +1,9 @@
 package model;
 
 import org.jetbrains.annotations.NotNull;
-
+import org.eclipse.jgit.revwalk.RevCommit;
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDate;
 
 public class Version {
@@ -10,6 +12,7 @@ public class Version {
     private Integer index;
     private String name;
     private LocalDate date;
+    private List<RevCommit> commitList = new ArrayList<>();
 
     public Version(String id, String name, Integer index, @NotNull LocalDate date){
 
@@ -18,6 +21,14 @@ public class Version {
         this.index = index;
         this.date = date;
 
+    }
+
+    public boolean isCommitListEmpty() {
+        return commitList.isEmpty();
+    }
+
+    public void addCommitToList(RevCommit commit) {
+        this.commitList.add(commit);
     }
 
     public Version(String id, String name, @NotNull LocalDate date){
