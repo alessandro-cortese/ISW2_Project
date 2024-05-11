@@ -4,15 +4,12 @@ import enums.FilenamesEnum;
 import model.ClassifierEvaluation;
 import model.ReleaseInfo;
 import model.Ticket;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jetbrains.annotations.NotNull;
 import retrievers.*;
 import utils.TicketUtils;
 import view.FileCreator;
-import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Comparator;
 
 public class RunningExecution {
 
@@ -49,7 +46,7 @@ public class RunningExecution {
                 //Selection of the tickets opened until the i-th release.
                 List<Ticket> ticketsUntilRelease = TicketUtils.getTicketsUntilRelease(tickets, i);
 
-                //Non viene aggiornata la buggyness del testing set
+                //Buggyness of testing set is not updated
                 MetricsRetriever.computeBuggyness(releaseInfoListHalved.subList(0, i), ticketsUntilRelease, commitRetriever, versionRetriever);
 
                 FileCreator.writeOnArff(projectName, releaseInfoListHalved.subList(0, i), FilenamesEnum.TRAINING, i);
@@ -62,8 +59,6 @@ public class RunningExecution {
             List<ClassifierEvaluation> classifierEvaluationList = wekaInfoRetriever.retrieveClassifiersEvaluation(projectName);
             FileCreator.writeEvaluationDataOnCsv(projectName, classifierEvaluationList);
 
-        } catch (GitAPIException | IOException e) {
-            throw new RuntimeException();
         } catch (Exception e) {
             throw new RuntimeException();
         }
