@@ -70,7 +70,6 @@ public class VersionRetriever {
                     throw new RuntimeException();
                 affectedVersions.add(version);
             }
-
         }
 
         return affectedVersions;
@@ -111,7 +110,6 @@ public class VersionRetriever {
         LocalDate localDate = LocalDate.parse(date);
         Version newReleaseInfo = new Version(id, name, localDate);
         versionInfoArrayList.add(newReleaseInfo);
-
     }
 
     public List<Version> getProjectVersions(){

@@ -14,7 +14,6 @@ public class Metrics {
     private final List<Integer> deletedLinesOfCodeList = new ArrayList<>();
     private int fixedDefects = 0;
 
-    public Metrics() {}
 
     public void setClassBuggyness() {
         this.buggyness = true;
@@ -46,28 +45,28 @@ public class Metrics {
         return deletedLinesOfCodeList;
     }
 
-    public void setMaxLocDeleted(int maxLocAdded) {
-        this.addedLOCMetrics.maxLoc = maxLocAdded;
+    public void setMaxLocDeleted(int maxLocDeleted) {
+        this.deletedLOCMetrics.loc = maxLocDeleted;
     }
 
     public int getMaxLocDeleted() {
-        return addedLOCMetrics.maxLoc;
+        return deletedLOCMetrics.maxLoc;
     }
 
-    public void setLocDeleted(int locAdded) {
-        this.addedLOCMetrics.loc = locAdded;
+    public void setLocDeleted(int locDeleted) {
+        this.deletedLOCMetrics.loc = locDeleted;
     }
 
     public int getLocDeleted() {
-        return addedLOCMetrics.loc;
+        return deletedLOCMetrics.loc;
     }
 
     public void setAvgLocDeleted(double avgLocAdded) {
-        this.addedLOCMetrics.avgLoc = avgLocAdded;
+        this.deletedLOCMetrics.avgLoc = avgLocAdded;
     }
 
     public double getAvgLocDeleted() {
-        return addedLOCMetrics.avgLoc;
+        return deletedLOCMetrics.avgLoc;
     }
 
     public void setMaxLocAdded(int maxLocAdded) {

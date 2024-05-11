@@ -15,6 +15,8 @@ import java.util.List;
 
 public class MetricsRetriever {
 
+    private MetricsRetriever() {}
+
     /**
      * This method set the buggyness to true of all classes that have been modified by fix commits of tickets and compute the number of fixed defects in each class foe each version.
      * @param releaseCommitsList The list of the project ReleaseCommits.
@@ -36,7 +38,7 @@ public class MetricsRetriever {
                     List<ChangedJavaClass> classChangedList = commitRetriever.retrieveChanges(commit);
 
                     for (ChangedJavaClass javaClass : classChangedList) {
-                        JavaClassUtil.updateJavaBuggyness(javaClass, releaseCommitsList, ticket.getAffectedReleases(), commit);
+                        JavaClassUtil.updateJavaBuggyness(javaClass, releaseCommitsList, ticket.getAffectedReleases());
                     }
                 }
 
@@ -57,7 +59,7 @@ public class MetricsRetriever {
         }
     }
 
-    private static void computeLocData(List<ReleaseCommits> releaseCommitsList, CommitRetriever commitRetriever) throws IOException {
+    private static void computeLocData(@NotNull List<ReleaseCommits> releaseCommitsList, CommitRetriever commitRetriever) throws IOException {
         for(ReleaseCommits rc: releaseCommitsList) {
             for (JavaClass javaClass : rc.getJavaClasses()) {
                 commitRetriever.computeAddedAndDeletedLinesList(javaClass);
@@ -66,7 +68,7 @@ public class MetricsRetriever {
         }
     }
 
-    private static void computeLocAndChurnMetrics(JavaClass javaClass) {
+    private static void computeLocAndChurnMetrics(@NotNull JavaClass javaClass) {
 
         int sumLOC = 0;
         int maxLOC = 0;
@@ -102,7 +104,7 @@ public class MetricsRetriever {
 
         //If a class has 0 revisions, its AvgLocAdded and AvgChurn are 0 (see initialization above).
         if(!javaClass.getMetrics().getAddedLinesList().isEmpty()) {
-            avgLOC = 1.0*sumLOC/javaClass.getMetrics().getAddedLinesList().size();
+            avgDeletedLOC = 1.0*sumLOC/javaClass.getMetrics().getDeletedLinesList().size();
         }
         if(!javaClass.getMetrics().getAddedLinesList().isEmpty() || !javaClass.getMetrics().getDeletedLinesList().isEmpty()) {
             avgChurn = 1.0*churn/(javaClass.getMetrics().getAddedLinesList().size() + javaClass.getMetrics().getDeletedLinesList().size());
@@ -117,10 +119,13 @@ public class MetricsRetriever {
         javaClass.getMetrics().setChurn(churn);
         javaClass.getMetrics().setMaxChurn(maxChurn);
         javaClass.getMetrics().setAvgChurn(avgChurn);
+        javaClass.getMetrics().setLocDeleted(sumOfTheDeletedLOC);
+        javaClass.getMetrics().setMaxLocDeleted(maxDeletedLOC);
+        javaClass.getMetrics().setAvgLocDeleted(avgDeletedLOC);
 
     }
 
-    public static void addSizeLabel(List<ReleaseCommits> releaseCommitsList) {
+    public static void addSizeLabel(@NotNull List<ReleaseCommits> releaseCommitsList) {
 
         for(ReleaseCommits rc: releaseCommitsList) {
             for(JavaClass javaClass: rc.getJavaClasses()) {
