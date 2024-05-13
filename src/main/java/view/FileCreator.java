@@ -126,7 +126,7 @@ public class FileCreator {
 
             for(ClassifierEvaluation classifierEvaluation: classifierEvaluationList) {
 
-                fw.write(projName + ","); //DATASET
+                fw.write(projName + ",");                                                   //DATASET
                 fw.write(classifierEvaluation.getWalkForwardIterationIndex() + ",");        //#TRAINING_RELEASES
                 fw.write(classifierEvaluation.getTrainingPercent() + ",");                  //%TRAINING_INSTANCES
                 fw.write(classifierEvaluation.getClassifier() + ",");                       //CLASSIFIER
