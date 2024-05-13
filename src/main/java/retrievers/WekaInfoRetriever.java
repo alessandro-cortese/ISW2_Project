@@ -2,30 +2,28 @@ package retrievers;
 
 import enums.*;
 import model.ClassifierEvaluation;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import utils.FileUtils;
-import weka.attributeSelection.*;
+import weka.attributeSelection.BestFirst;
 import weka.classifiers.Classifier;
+import weka.classifiers.CostMatrix;
 import weka.classifiers.Evaluation;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
+import weka.classifiers.meta.CostSensitiveClassifier;
 import weka.classifiers.meta.FilteredClassifier;
 import weka.classifiers.trees.RandomForest;
 import weka.core.Instances;
+import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.filters.Filter;
 import weka.filters.supervised.attribute.AttributeSelection;
 import weka.filters.supervised.instance.Resample;
+import weka.filters.supervised.instance.SMOTE;
 import weka.filters.supervised.instance.SpreadSubsample;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-
-import static enums.ClassifierEnum.*;
+import java.util.*;
 
 public class WekaInfoRetriever {
 
@@ -41,19 +39,19 @@ public class WekaInfoRetriever {
 
         Map<String, List<ClassifierEvaluation>> classifiersListMap = new HashMap<>();
 
-        for(ClassifierEnum classifierEnum: ClassifierEnum.values()) {
-            classifiersListMap.put(classifierEnum.name(), new ArrayList<>());
+        for(ClassifierEnum classifierName: ClassifierEnum.values()) {
+            classifiersListMap.put(classifierName.name(), new ArrayList<>());
         }
 
-        for(int i=1; i<=this.numIter; i++) {
+        for(int i=1; i<=this.numIter; i++) {                                                                                                    //For each iteration
 
-            for(ClassifierEnum classifierEnum: ClassifierEnum.values()) {
-                for (FeatureSelectionEnum featureSelectionEnum : FeatureSelectionEnum.values()) {   //Iterate on all feature selection mode
-                    for (SamplingEnum samplingEnum : SamplingEnum.values()) {       //Iterate on all sampling mode
-                        for (CostSensitiveEnum costSensitiveEnum : CostSensitiveEnum.values()) {    //Iterate on all cost sensitive mode
+            for(ClassifierEnum classifierName: ClassifierEnum.values()) {                                                                       //For each classifier
+                for (FeatureSelectionEnum featureSelectionEnum : FeatureSelectionEnum.values()) {                                               //Iterate on all feature selection mode
+                    for (SamplingEnum samplingEnum : SamplingEnum.values()) {                                                                   //Iterate on all sampling mode
+                        for (CostSensitiveEnum costSensitiveEnum : CostSensitiveEnum.values()) {                                                //Iterate on all cost sensitive mode
                             //Evaluate the classifier
-                            classifiersListMap.get(classifierEnum.name())  //Get the list associated to the actual classifier
-                                    .add(useClassifier(i, projName, classifierEnum, featureSelectionEnum, samplingEnum, costSensitiveEnum)); //Evaluate the classifier
+                            classifiersListMap.get(classifierName.name())                                                                       //Get the list associated to the actual classifier
+                                    .add(useClassifier(i, projName, classifierName, featureSelectionEnum, samplingEnum, costSensitiveEnum));    //Evaluate the classifier
                         }
                     }
                 }
@@ -75,7 +73,6 @@ public class WekaInfoRetriever {
 
         DataSource source1 = new DataSource(Path.of("retrieved_data", projName, "training", FileUtils.getArffFilename(FilenamesEnum.TRAINING, projName, index)).toString());
         DataSource source2 = new DataSource(Path.of("retrieved_data", projName, "testing",  FileUtils.getArffFilename(FilenamesEnum.TESTING, projName, index)).toString());
-
         Instances training = source1.getDataSet();
         Instances testing = source2.getDataSet();
 
@@ -87,73 +84,75 @@ public class WekaInfoRetriever {
 
         //FEATURE SELECTION
         switch (featureSelection) {
-            case GREEDY_BACKWARD_SEARCH -> {
-                //FEATURE SELECTION WITH GREEDY BACKWARD SEARCH TECNIQUE
-                ASEvaluation subsetEval = new CfsSubsetEval();
-                GreedyStepwise search = new GreedyStepwise();
-                search.setSearchBackwards(true);
+            case BEST_FIRST_FORWARD -> {
+                //FEATURE SELECTION WITH BEST FIRST FORWARD TECHNIQUE
+                AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 1 -N 5");
 
-                List<Instances> filteredAttrList = applyFeatureSelection(subsetEval, search, training, testing);
-
-                training = filteredAttrList.get(0);
-                testing = filteredAttrList.get(1);
+                classifier = getFilteredClassifier(classifier, filter);
             }
-            case BEST_FIRST -> {
-                //FEATURE SELECTION WITH BEST FIRST TECNIQUE
-                ASEvaluation subsetEval = new CfsSubsetEval();
-                BestFirst search = new BestFirst();
+            case BEST_FIRST_BACKWARD -> {
+                //FEATURE SELECTION WITH BEST FIRST BACKWARD TECHNIQUE
+                AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 0 -N 5");
 
-                List<Instances> filteredAttrList = applyFeatureSelection(subsetEval, search, training, testing);
-
-                training = filteredAttrList.get(0);
-                testing = filteredAttrList.get(1);
+                classifier = getFilteredClassifier(classifier, filter);
             }
         }
+
+        int[] nominalCounts = training.attributeStats(training.numAttributes() - 1).nominalCounts;
+        int numberOfFalse = nominalCounts[1];
+        int numberOfTrue = nominalCounts[0];
 
         //SAMPLING
         switch (sampling) {
             case UNDERSAMPLING -> {
-                //VALIDATION WITH UNDERSAMPLING
+                //VALIDATION WITH UNDER SAMPLING
                 SpreadSubsample spreadSubsample = new SpreadSubsample();
                 spreadSubsample.setInputFormat(training);
-                spreadSubsample.setOptions(new String[]{"-M", "1.0"});
+                spreadSubsample.setOptions(Utils.splitOptions("-M 1.0"));
 
-                FilteredClassifier fc = new FilteredClassifier();
-                fc.setFilter(spreadSubsample);
-                fc.setClassifier(classifier);
-
-                classifier = fc;
+                classifier = getFilteredClassifier(classifier, spreadSubsample);
             }
-            /*case CLASS_BALANCER -> {
-                //VALIDATION WITH CLASS_BALANCER
-                ClassBalancer classBalancer = new ClassBalancer();
-                classBalancer.setInputFormat(training);
-                classBalancer.setOptions(new String[]{"-num-intervals", "10", "-S", "1"});
-                FilteredClassifier fc = new FilteredClassifier();
-                fc.setFilter(classBalancer);
-                fc.setClassifier(classifier);
-                classifier = fc;
-            }*/
             case OVERSAMPLING -> {
                 //VALIDATION WITH OVERSAMPLING
-                int[] nominalCounts = training.attributeStats(training.numAttributes() - 1).nominalCounts;
-                int numberOfFalse = nominalCounts[1];
-                int numberOfTrue = nominalCounts[0];
                 double proportionOfMajorityValue = (double) numberOfFalse / (numberOfFalse + numberOfTrue);
 
                 Resample resample = new Resample();
                 resample.setInputFormat(training);
-                resample.setOptions(new String[]{"-B", "1.0", "-S", "1", "-Z", String.valueOf(proportionOfMajorityValue * 2 * 100)});
+                String options = "-B 1.0 -S 1 -Z " + proportionOfMajorityValue * 2 * 100;
+                resample.setOptions(Utils.splitOptions(options));
 
-                FilteredClassifier fc = new FilteredClassifier();
-                fc.setFilter(resample);
-                fc.setClassifier(classifier);
+                classifier = getFilteredClassifier(classifier, resample);
+            }
+            case SMOTE -> {
+                double percentSMOTE;    //Percentage of oversampling (e.g. a percentage of 100% will cause a doubling of the instances of the minority class)
+                if(numberOfTrue==0 || numberOfTrue > numberOfFalse){
+                    percentSMOTE = 0;
+                }else{
+                    percentSMOTE = (100.0*(numberOfFalse-numberOfTrue))/numberOfTrue;
+                }
+                SMOTE smote = new SMOTE();
+                smote.setInputFormat(training);
+                smote.setOptions(Utils.splitOptions("-C 1 -K 5 -P " + percentSMOTE + " -S 1"));
+                if(numberOfTrue > 1)    //It is impossible assign 0 neighbors
+                    smote.setNearestNeighbors(Math.min(numberOfTrue - 1, 5));   //In this way, we avoid the problem that SMOTE needs al least 5 true instances.
+                else
+                    break;
 
-                classifier = fc;
+                classifier = getFilteredClassifier(classifier, smote);
             }
         }
 
-        //TODO COST SENSITIVE
+        //COST SENSITIVE
+        if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.SENSITIVE_LEARNING) {
+            //COST SENSITIVE WITH SENSITIVE LEARNING
+            CostSensitiveClassifier costSensitiveClassifier = new CostSensitiveClassifier();
+            costSensitiveClassifier.setMinimizeExpectedCost(true);
+            CostMatrix costMatrix = getCostMatrix();
+            costSensitiveClassifier.setCostMatrix(costMatrix);
+            costSensitiveClassifier.setClassifier(classifier);
+
+            classifier = costSensitiveClassifier;
+        }
 
         classifier.buildClassifier(training);
         eval.evaluateModel(classifier, testing);
@@ -170,7 +169,27 @@ public class WekaInfoRetriever {
         return simpleRandomForest;
     }
 
-    private Classifier getClassifierByEnum(@NotNull ClassifierEnum classifierName) {
+    @NotNull
+    private static AttributeSelection getBestFirstAttributeSelection(Instances training, String quotedOptionString) throws Exception {
+        AttributeSelection filter = new AttributeSelection();
+        BestFirst search = new BestFirst();
+        search.setOptions(Utils.splitOptions(quotedOptionString));
+        filter.setSearch(search);
+        filter.setInputFormat(training);
+        return filter;
+    }
+
+    @NotNull
+    private static Classifier getFilteredClassifier(Classifier classifier, Filter filter) {
+        FilteredClassifier filteredClassifier = new FilteredClassifier();
+
+        filteredClassifier.setClassifier(classifier);
+        filteredClassifier.setFilter(filter);
+
+        return filteredClassifier;
+    }
+
+    private @NotNull Classifier getClassifierByEnum(@NotNull ClassifierEnum classifierName) throws Exception {
         switch (classifierName) {
             case IBK -> {
                 return new IBk();
@@ -179,43 +198,23 @@ public class WekaInfoRetriever {
                 return new NaiveBayes();
             }
             case RANDOM_FOREST -> {
+                //randomForest.setOptions(Utils.splitOptions("-P 100 -I 100 -num-slots 1 -K 0 -M 1.0 -V 0.001 -S 1"));
                 return new RandomForest();
             }
         }
 
-        return null;
+        throw new RuntimeException();
     }
 
-    /**
-     * This method executes feature selection on the Instances and return a list of two param:
-     *      1. the filtered training attribute.
-     *      2. the filtered testing attribute.
-     * @param training Training Instances on which apply feature selection.
-     * @param testing Testing Instances on which apply feature selection.
-     * @return A list of two param:
-     *      1. the filtered training attribute.
-     *      2. the filtered testing attribute.
-     */
-    private @NotNull List<Instances> applyFeatureSelection(ASEvaluation eval, ASSearch search, Instances training, Instances testing) throws Exception {
-
-        AttributeSelection filter = new AttributeSelection();
-        filter.setEvaluator(eval);
-        filter.setSearch(search);
-        filter.setInputFormat(training);
-
-        Instances filteredTraining = Filter.useFilter(training, filter);
-        Instances filteredTesting = Filter.useFilter(testing, filter);
-
-        int numAttrFiltered = filteredTraining.numAttributes();
-        filteredTraining.setClassIndex(numAttrFiltered - 1);
-        //filteredTesting.setClassIndex(numAttrFiltered - 1);
-
-        List<Instances> filteredAttrList = new ArrayList<>();
-
-        filteredAttrList.add(filteredTraining);
-        filteredAttrList.add(filteredTesting);
-
-        return filteredAttrList;
+    private static CostMatrix getCostMatrix() {
+        double weightFalsePositive = 1.0;
+        double weightFalseNegative = 10.0;
+        CostMatrix costMatrix = new CostMatrix(2);
+        costMatrix.setCell(0, 0, 0.0);
+        costMatrix.setCell(1, 0, weightFalsePositive);
+        costMatrix.setCell(0, 1, weightFalseNegative);
+        costMatrix.setCell(1, 1, 0.0);
+        return costMatrix;
     }
 
 }

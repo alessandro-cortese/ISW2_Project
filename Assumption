@@ -6,4 +6,5 @@ Project Assumption:
 - To sort versions I take their release date as a reference;
 - If multiple tickets are mentioned in a commit, I consider the commit as resolving all the tickets mentioned;
 - I calculate the incremental proportion value using all valid tickets prior to the ticket I am considering. A ticket is valid if it has iv < ov < fv;
-- Empty or comment LOCs are also considered in the calculation of LOCs.
+- Empty or comment LOCs are also considered in the calculation of LOCs;
+- SMOTE is used only if the number of instances is bigger than 1. By default it needs at least 5 true instances, but I added a control that adjusts this number dynamically.

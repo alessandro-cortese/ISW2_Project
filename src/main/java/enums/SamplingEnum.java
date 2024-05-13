@@ -2,7 +2,7 @@ package enums;
 
 public enum SamplingEnum {
     NONE,
-    //CLASS_BALANCER,
+    SMOTE,
     OVERSAMPLING,
     UNDERSAMPLING
 }
