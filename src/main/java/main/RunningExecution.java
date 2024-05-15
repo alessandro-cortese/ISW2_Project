@@ -8,6 +8,8 @@ import org.jetbrains.annotations.NotNull;
 import retrievers.*;
 import utils.TicketUtils;
 import view.FileCreator;
+
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -15,7 +17,7 @@ public class RunningExecution {
 
     private RunningExecution () {}
 
-    public  static void collectData(String projectName) {
+    public  static void collectData(String projectName) throws Exception {
 
         //Retrieve all project ticket that are valid ticket
         TicketRetriever ticketRetriever = new TicketRetriever(projectName);
@@ -23,45 +25,38 @@ public class RunningExecution {
         VersionRetriever versionRetriever = ticketRetriever.getVersionRetriever();
 
         List<Ticket> tickets = ticketRetriever.getTickets();
-        try{
+        //Retrieve the release information about commits, classes and metrics that involve the release.
+        List<ReleaseInfo> allTheReleaseInfo = commitRetriever.getReleaseCommits(versionRetriever, commitRetriever.retrieveCommit());
+        MetricsRetriever.computeMetrics(allTheReleaseInfo, tickets, commitRetriever, versionRetriever);
+        FileCreator.writeOnCsv(projectName, allTheReleaseInfo, FilenamesEnum.METRICS, 0);
+        System.out.println("allReleaseInfoSize: " + allTheReleaseInfo.size());
 
-            System.out.println("\n" + projectName + " - NUMBER OF COMMIT: " + commitRetriever.retrieveCommit().size() + "\n");
+        //----------------------------------------------------------- WALK FORWARD -----------------------------------------------------------
 
-            List<ReleaseInfo> allTheReleaseInfo = commitRetriever.getReleaseCommits(ticketRetriever.getVersionRetriever(), commitRetriever.retrieveCommit());
+        List<ReleaseInfo> releaseInfoListHalved = discardHalfReleases(allTheReleaseInfo);
 
-            FileCreator.writeOnCsv(projectName, allTheReleaseInfo, FilenamesEnum.METRICS, 0);
-            MetricsRetriever.computeMetrics(allTheReleaseInfo, tickets, commitRetriever, ticketRetriever.getVersionRetriever());
-            List<ReleaseInfo> releaseInfoList = discardHalfReleases(allTheReleaseInfo);
-            printReleaseInfo(projectName, allTheReleaseInfo);
+        //Iterate starting by 1 so that the walk forward starts from using at least one training set.
 
-            //----------------------------------------------------------- WALK FORWARD -----------------------------------------------------------
+        for(int i = 1; i < releaseInfoListHalved.size(); i++) {
 
-            List<ReleaseInfo> releaseInfoListHalved = discardHalfReleases(allTheReleaseInfo);
+            //Selection of the tickets opened until the i-th release.
+            List<Ticket> ticketsUntilRelease = TicketUtils.getTicketsUntilRelease(tickets, i);
 
-            System.out.println("Number of tickets: " + tickets.size());
-            TicketUtils.printTickets(tickets);
+            //Non viene aggiornata la buggyness del testing set.
+            MetricsRetriever.computeBuggyness(releaseInfoListHalved.subList(0, i), ticketsUntilRelease, commitRetriever, versionRetriever);
 
-            //Iterate starting by 1 so that the walk forward starts from using at least one training set.
-            for(int i = 1; i < releaseInfoListHalved.size(); i++) {
-                //Selection of the tickets opened until the i-th release.
-                List<Ticket> ticketsUntilRelease = TicketUtils.getTicketsUntilRelease(tickets, i);
-
-                //Buggyness of testing set is not updated
-                MetricsRetriever.computeBuggyness(releaseInfoListHalved.subList(0, i), ticketsUntilRelease, commitRetriever, versionRetriever);
-
-                FileCreator.writeOnArff(projectName, releaseInfoListHalved.subList(0, i), FilenamesEnum.TRAINING, i);
-                ArrayList<ReleaseInfo> testingRelease = new ArrayList<>();
-                testingRelease.add(releaseInfoListHalved.get(i));
-                FileCreator.writeOnArff(projectName, testingRelease, FilenamesEnum.TESTING, i);
-            }
-
-            WekaInfoRetriever wekaInfoRetriever = new WekaInfoRetriever(projectName, allTheReleaseInfo.size()/2);
-            List<ClassifierEvaluation> classifierEvaluationList = wekaInfoRetriever.retrieveClassifiersEvaluation(projectName);
-            FileCreator.writeEvaluationDataOnCsv(projectName, classifierEvaluationList);
-
-        } catch (Exception e) {
-            throw new RuntimeException();
+            FileCreator.writeOnArff(projectName, releaseInfoListHalved.subList(0, i), FilenamesEnum.TRAINING, i);
+            ArrayList<ReleaseInfo> testingRelease = new ArrayList<>();
+            testingRelease.add(releaseInfoListHalved.get(i));
+            FileCreator.writeOnArff(projectName, testingRelease, FilenamesEnum.TESTING, i);
+            /*if(i == releaseInfoListHalved.size() - 1) {
+                FileCreator.writeOnCsv(projectName, testingRelease, FilenamesEnum.TESTING, i);
+            }*/
         }
+
+        WekaInfoRetriever wekaInfoRetriever = new WekaInfoRetriever(projectName, allTheReleaseInfo.size()/2);
+        List<ClassifierEvaluation> classifierEvaluationList = wekaInfoRetriever.retrieveClassifiersEvaluation(projectName);
+        FileCreator.writeEvaluationDataOnCsv(projectName, classifierEvaluationList);
     }
 
     private static @NotNull List<ReleaseInfo> discardHalfReleases(@NotNull List<ReleaseInfo> releaseInfoList) {
@@ -80,17 +75,6 @@ public class RunningExecution {
 
 
         return releaseInfoList.subList(0, n/2+1);
-    }
-
-    ;
-    private static void printReleaseInfo(String projectName, @NotNull List<ReleaseInfo> releaseCommitsList) {
-        for(ReleaseInfo rc: releaseCommitsList) {
-
-            System.out.println(projectName + " version: " + rc.getRelease().getName() + ";" +
-                    " Commits: " + rc.getCommits().size() + ";" +
-                    " Java classes: " + rc.getJavaClasses().size() + ";" +
-                    " Buggy classes: " + rc.getBuggyClasses());
-        }
     }
 
 }

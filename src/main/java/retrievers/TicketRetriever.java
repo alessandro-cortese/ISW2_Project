@@ -28,13 +28,13 @@ public class TicketRetriever {
      * This is the constructor that you have to use for retrieve tickets without applying cold start.
      * @param projectName The project name from which retrieve tickets.
      */
-    public TicketRetriever(String projectName) {
+    public TicketRetriever(String projectName) throws GitAPIException {
         init(projectName);
         try {
             commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
             commitRetriever.associateCommitAndVersion(versionRetriever.getProjectVersions()); //Association of commits and versions and deletion of the version without commits
             VersionUtil.printVersion(versionRetriever.getProjectVersions());
-        } catch (GitAPIException e) {
+        } catch (GitAPIException | IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -44,12 +44,12 @@ public class TicketRetriever {
      * @param projectName The project name from which retrieve tickets.
      * @param coldStart The value used to specifying that you are using cold start. Must be true.
      */
-    public TicketRetriever(String projectName, boolean coldStart) {
+    public TicketRetriever(String projectName, boolean coldStart) throws GitAPIException {
         this.coldStart = coldStart;
         init(projectName);
     }
     
-    private void init(String projectName) {
+    private void init(String projectName) throws GitAPIException {
 
         String issueType = "Bug";
         String state = "closed";
@@ -73,7 +73,7 @@ public class TicketRetriever {
 
     }
 
-    private @NotNull List<Ticket> retrieveBugTickets(String projectName, String issueType, String state, String resolution) throws IOException, JSONException{
+    private @NotNull List<Ticket> retrieveBugTickets(String projectName, String issueType, String state, String resolution) throws IOException, JSONException, GitAPIException {
 
         int i = 0;
         int j;
@@ -134,7 +134,7 @@ public class TicketRetriever {
     }
 
     // Make consistency the inconsistency ticket
-    private void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) {
+    private void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) throws GitAPIException {
 
         List<Ticket> ticketForProportion = new ArrayList<>();
         List<Ticket> allTickets = new ArrayList<>();
@@ -166,7 +166,7 @@ public class TicketRetriever {
         }
     }
 
-    private static double incrementalProportion(@NotNull List<Ticket> consistentTickets) {
+    private static double incrementalProportion(@NotNull List<Ticket> consistentTickets) throws GitAPIException {
         double proportionValue;
 
         if(consistentTickets.size() >= 5) {

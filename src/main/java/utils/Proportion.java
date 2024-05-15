@@ -2,6 +2,7 @@ package utils;
 
 import enums.ProjectsEnum;
 import model.Ticket;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ public class Proportion {
 
     private Proportion() {}
 
-    public static double computeColdStartProportionValue() {
+    public static double computeColdStartProportionValue() throws GitAPIException {
         if(coldStartProportionValue != -1) return coldStartProportionValue;
 
         List<Double> proportionValueList = new ArrayList<>();

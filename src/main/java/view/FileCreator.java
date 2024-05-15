@@ -6,7 +6,6 @@ import model.JavaClass;
 import model.ReleaseInfo;
 import org.jetbrains.annotations.NotNull;
 import utils.FileUtils;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -16,8 +15,6 @@ import java.nio.file.Path;
 public class FileCreator {
 
     private FileCreator() {}
-
-
 
     private static @NotNull File createANewFile(String projName, FilenamesEnum fileEnum, int fileIndex, String endPath) throws IOException {
         String enumFilename = FileUtils.enumToFilename(fileEnum, fileIndex);
@@ -29,11 +26,11 @@ public class FileCreator {
         File file = new File(pathname.toUri());
 
         if(!dir.exists() && !file.mkdirs()) {
-            throw new RuntimeException(); //Exception: dir creation impossible
+            throw new RuntimeException();                                           //Exception: dir creation impossible
         }
 
         if(file.exists() && !file.delete()) {
-            throw new IOException(); //Exception: file deletion impossible
+            throw new IOException();                                                //Exception: file deletion impossible
         }
 
         return file;
@@ -73,9 +70,10 @@ public class FileCreator {
             for(JavaClass javaClass: releaseInfo.getJavaClasses()) {
 
                 if(!isArff) {
-                    fw.write(releaseInfo.getRelease().getIndex() + ","); //VERSION
-                    fw.write(javaClass.getName() + ","); //JAVA_CLASS
+                    fw.write(releaseInfo.getRelease().getIndex() + ",");                    //VERSION
+                    fw.write(javaClass.getName() + ",");                                    //JAVA_CLASS
                 }
+
                 fw.write(javaClass.getMetrics().getSize() + ",");                           //SIZE
                 fw.write(javaClass.getMetrics().getLocAdded() + ",");                       //LOC_ADDED
                 fw.write(javaClass.getMetrics().getMaxLocAdded() + ",");                    //MAX_LOC_ADDED

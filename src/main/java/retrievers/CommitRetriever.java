@@ -32,7 +32,7 @@ public class CommitRetriever {
     private VersionRetriever versionRetriever;
     private List<RevCommit> commitList;
 
-    public CommitRetriever(String repositoryPath, VersionRetriever versionRetriever) {
+    public CommitRetriever(String repositoryPath, VersionRetriever versionRetriever) throws IOException {
         this.repository = GitUtils.getRepository(repositoryPath);
         this.git = new Git(repository);
         this.versionRetriever = versionRetriever;
@@ -79,33 +79,30 @@ public class CommitRetriever {
      * @param tickets: tickets list that must be associate to the relative commits
      */
 
-    public void associateTicketAndCommit(List<Ticket> tickets) {
+    public void associateTicketAndCommit(List<Ticket> tickets) throws GitAPIException{
 
-        try {
-            List<RevCommit> commits = this.retrieveCommit();
+        List<RevCommit> commits = this.retrieveCommit();
 
-            for (Ticket ticket : tickets) {
+        for (Ticket ticket : tickets) {
 
-                List<RevCommit> associatedCommits = this.retrieveAssociatedCommits(commits, ticket);
-                List<RevCommit> consistentCommits = new ArrayList<>();
+            List<RevCommit> associatedCommits = this.retrieveAssociatedCommits(commits, ticket);
+            List<RevCommit> consistentCommits = new ArrayList<>();
 
-                for (RevCommit commit : associatedCommits) {
-                    LocalDate when = GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen());
+            assert associatedCommits != null;
+            for (RevCommit commit : associatedCommits) {
+                LocalDate when = GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen());
 
-                    //TODO controllare se i commit presi sono giusti -> controllare se le classi buggy sono giuste
-                    if (!ticket.getFixedRelease().getDate().isBefore(when) && //commitDate <= fixedVersionDate
-                            !ticket.getInjectedRelease().getDate().isAfter(when)) { //commitDate > injectedVersionDate
-                            consistentCommits.add(commit);
-                    }
+                if (!ticket.getFixedRelease().getDate().isBefore(when) && //commitDate <= fixedVersionDate
+                        !ticket.getInjectedRelease().getDate().isAfter(when)) { //commitDate > injectedVersionDate
+                    consistentCommits.add(commit);
                 }
-                ticket.setAssociatedCommits(consistentCommits);
             }
-            //Discard ticket that have no associated commits
-            tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty());
 
-        } catch (GitAPIException e) {
-            throw new RuntimeException(e);
+            ticket.setAssociatedCommits(consistentCommits);
+
         }
+        //Discard ticket that have no associated commits
+        tickets.removeIf(ticket -> ticket.getAssociatedCommits().isEmpty());
 
     }
 
@@ -169,7 +166,7 @@ public class CommitRetriever {
                 Version release = VersionUtil.retrieveNextRelease(versionRetriever, GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()));
 
                 if (release == null)
-                    throw new RuntimeException();
+                    break;
 
                 javaClasses.add(new JavaClass(
                         treeWalk.getPathString(),
@@ -182,7 +179,7 @@ public class CommitRetriever {
         return javaClasses;
     }
 
-    public List<ChangedJavaClass> retrieveChanges(RevCommit commit) {
+    public List<ChangedJavaClass> retrieveChanges(RevCommit commit) throws IOException {
 
         List<ChangedJavaClass> changedJavaClassList = new ArrayList<>();
 
@@ -202,16 +199,12 @@ public class CommitRetriever {
 
             }
 
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         } catch (ArrayIndexOutOfBoundsException e) {
+
             //commit has no parents: this is the first commit, so add all classes
-            try {
-                List<JavaClass> javaClasses = getClasses(commit);
-                changedJavaClassList = JavaClassUtil.createChangedJavaClass(javaClasses);
-            } catch (IOException ex) {
-                throw new RuntimeException(ex);
-            }
+            List<JavaClass> javaClasses = getClasses(commit);
+            changedJavaClassList = JavaClassUtil.createChangedJavaClass(javaClasses);
+
         }
         return changedJavaClassList;
     }

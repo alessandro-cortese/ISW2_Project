@@ -13,6 +13,7 @@ import weka.classifiers.lazy.IBk;
 import weka.classifiers.meta.CostSensitiveClassifier;
 import weka.classifiers.meta.FilteredClassifier;
 import weka.classifiers.trees.RandomForest;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
@@ -50,8 +51,11 @@ public class WekaInfoRetriever {
                     for (SamplingEnum samplingEnum : SamplingEnum.values()) {                                                                   //Iterate on all sampling mode
                         for (CostSensitiveEnum costSensitiveEnum : CostSensitiveEnum.values()) {                                                //Iterate on all cost sensitive mode
                             //Evaluate the classifier
+                            /*System.out.println("Project: " + projName + "\nClassifier:" + classifierName.name() + "\nFeature Selection: " + featureSelectionEnum.name()
+                            + "\nSampling: " + samplingEnum.name() + "\nCost: " + costSensitiveEnum.name());*/
                             classifiersListMap.get(classifierName.name())                                                                       //Get the list associated to the actual classifier
-                                    .add(useClassifier(i, projName, classifierName, featureSelectionEnum, samplingEnum, costSensitiveEnum));    //Evaluate the classifier
+                                    .add(useClassifier(i, projName, classifierName, featureSelectionEnum, samplingEnum, costSensitiveEnum));//Evaluate the classifier
+
                         }
                     }
                 }
@@ -70,7 +74,6 @@ public class WekaInfoRetriever {
     private @NotNull ClassifierEvaluation useClassifier(int index, String projName, ClassifierEnum classifierName, @NotNull FeatureSelectionEnum featureSelection, @NotNull SamplingEnum sampling, CostSensitiveEnum costSensitive) throws Exception {
 
         Classifier classifier = getClassifierByEnum(classifierName);
-
         DataSource source1 = new DataSource(Path.of("retrieved_data", projName, "training", FileUtils.getArffFilename(FilenamesEnum.TRAINING, projName, index)).toString());
         DataSource source2 = new DataSource(Path.of("retrieved_data", projName, "testing",  FileUtils.getArffFilename(FilenamesEnum.TESTING, projName, index)).toString());
         Instances training = source1.getDataSet();
@@ -144,6 +147,7 @@ public class WekaInfoRetriever {
 
         //COST SENSITIVE
         if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.SENSITIVE_LEARNING) {
+
             //COST SENSITIVE WITH SENSITIVE LEARNING
             CostSensitiveClassifier costSensitiveClassifier = new CostSensitiveClassifier();
             costSensitiveClassifier.setMinimizeExpectedCost(true);
@@ -152,10 +156,24 @@ public class WekaInfoRetriever {
             costSensitiveClassifier.setClassifier(classifier);
 
             classifier = costSensitiveClassifier;
+
         }
 
         classifier.buildClassifier(training);
-        eval.evaluateModel(classifier, testing);
+
+        //Get probability of classes
+
+        /*int trueClassifierIndex = training.classAttribute().indexOfValue("True");
+
+        for(int i = 0; i < training.numInstances(); i++){
+
+            Instance instance = training.instance(i);
+            double[] distribution = classifier.distributionForInstance(instance);
+            System.out.println("Probability for instance: " + i + " " + distribution[trueClassifierIndex]);
+
+        }*/
+
+
         ClassifierEvaluation simpleRandomForest = new ClassifierEvaluation(this.projName, index, classifierName.name(), featureSelection, sampling, costSensitive);
         simpleRandomForest.setTrainingPercent(100.0 * training.numInstances() / (training.numInstances() + testing.numInstances()));
         simpleRandomForest.setPrecision(eval.precision(0));

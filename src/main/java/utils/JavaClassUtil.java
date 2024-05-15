@@ -8,7 +8,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.jetbrains.annotations.NotNull;
 import retrievers.CommitRetriever;
 import retrievers.VersionRetriever;
-
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -19,9 +19,9 @@ public class JavaClassUtil {
 
     public static void updateJavaBuggyness(ChangedJavaClass className, @NotNull List<ReleaseInfo> releaseInfoList, List<Version> affectedReleases) {
 
-        for(ReleaseInfo rc: releaseInfoList) { //TODO Tra le affected release potrebbero esserci release senza commit
-            if(affectedReleases.contains(rc.getRelease())) { //Get the affected release and update the buggyness of the java class
-                List<JavaClass> javaClasses = rc.getJavaClasses(); //Get the java classes of the release
+        for(ReleaseInfo rc: releaseInfoList) {                                          //TODO Tra le affected release potrebbero esserci release senza commit
+            if(affectedReleases.contains(rc.getRelease())) {                            //Get the affected release and update the buggyness of the java class
+                List<JavaClass> javaClasses = rc.getJavaClasses();                      //Get the java classes of the release
                 findClassAndSetBuggyness(className, javaClasses);
             }
         }
@@ -33,6 +33,7 @@ public class JavaClassUtil {
      * @param className   the name of the searched class
      * @param javaClasses the list of java classes in the release
      */
+
     private static void findClassAndSetBuggyness(ChangedJavaClass className, @NotNull List<JavaClass> javaClasses) {
         for(JavaClass javaClass: javaClasses) {
             if(Objects.equals(javaClass.getName(), className.getJavaClassName())) {
@@ -42,7 +43,7 @@ public class JavaClassUtil {
         }
     }
 
-    public static void updateNumberOfFixedDefects(VersionRetriever versionRetriever, @NotNull List<RevCommit> commits, List<ReleaseInfo> releaseInfoList, CommitRetriever commitRetriever) {
+    public static void updateNumberOfFixedDefects(VersionRetriever versionRetriever, @NotNull List<RevCommit> commits, List<ReleaseInfo> releaseInfoList, CommitRetriever commitRetriever) throws IOException {
 
         for(RevCommit commit: commits){
 
@@ -74,7 +75,7 @@ public class JavaClassUtil {
         }
     }
 
-    public static void updateJavaClassCommits(CommitRetriever commitRetriever, @NotNull List<RevCommit> commits, List<JavaClass> javaClasses) {
+    public static void updateJavaClassCommits(CommitRetriever commitRetriever, @NotNull List<RevCommit> commits, List<JavaClass> javaClasses) throws IOException {
 
         for(RevCommit commit: commits) {
             List<ChangedJavaClass> changedJavaClassList = commitRetriever.retrieveChanges(commit);
