@@ -1,6 +1,5 @@
 package model;
 
-
 import enums.CostSensitiveEnum;
 import enums.FeatureSelectionEnum;
 import enums.SamplingEnum;
@@ -236,6 +235,5 @@ public class ClassifierEvaluation {
     public void setFn(double fn) {
         this.fn = fn;
     }
-
 
 }

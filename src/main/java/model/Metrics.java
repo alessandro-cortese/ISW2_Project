@@ -45,16 +45,16 @@ public class Metrics {
         return deletedLinesOfCodeList;
     }
 
-    public void setMaxLocDeleted(int maxLocDeleted) {
-        this.deletedLOCMetrics.loc = maxLocDeleted;
+    public void setMaxLocDeleted(int maxLocAdded) {
+        this.deletedLOCMetrics.maxLoc = maxLocAdded;
     }
 
     public int getMaxLocDeleted() {
         return deletedLOCMetrics.maxLoc;
     }
 
-    public void setLocDeleted(int locDeleted) {
-        this.deletedLOCMetrics.loc = locDeleted;
+    public void setLocDeleted(int locAdded) {
+        this.deletedLOCMetrics.loc = locAdded;
     }
 
     public int getLocDeleted() {
@@ -125,12 +125,12 @@ public class Metrics {
         this.fixedDefects = fixedDefects + 1;
     }
 
-    public int getnAuth() {
-        return nAuth;
+    public void setnAuth(int size) {
+        this.nAuth = size;
     }
 
-    public void setnAuth(int nAuth) {
-        this.nAuth = nAuth;
+    public int getnAuth() {
+        return nAuth;
     }
 
     private static class LOCMetrics {

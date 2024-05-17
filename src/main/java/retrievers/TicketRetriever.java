@@ -1,91 +1,83 @@
 package retrievers;
 
 import model.Ticket;
+import model.Version;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import model.Version;
-import utils.JSONUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
-import utils.Proportion;
+import utils.JSONUtils;
 import utils.VersionUtil;
+import utils.Proportion;
+
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 
 public class TicketRetriever {
 
-    private static final String FIELDS = "fields";
-    private VersionRetriever versionRetriever;
-    private CommitRetriever commitRetriever;
-    private List<Ticket> tickets;
-    private boolean coldStart = false;
+    static final String FIELDS = "fields";
+    VersionRetriever versionRetriever;
+    CommitRetriever commitRetriever;
+    List<Ticket> tickets;
+    boolean coldStart = false;
 
     /**
      * This is the constructor that you have to use for retrieve tickets without applying cold start.
-     * @param projectName The project name from which retrieve tickets.
+     * @param projName The project name from which retrieve tickets.
      */
-    public TicketRetriever(String projectName) throws GitAPIException {
-        init(projectName);
-        try {
-            commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
-            commitRetriever.associateCommitAndVersion(versionRetriever.getProjectVersions()); //Association of commits and versions and deletion of the version without commits
-            VersionUtil.printVersion(versionRetriever.getProjectVersions());
-        } catch (GitAPIException | IOException e) {
-            throw new RuntimeException(e);
-        }
+    public TicketRetriever(String projName) throws GitAPIException, IOException, URISyntaxException {
+        init(projName);
+        commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
+        commitRetriever.associateCommitAndVersion(versionRetriever.getProjVersions()); //Association of commits and versions and deletion of the version without commits
+
     }
 
     /**
      * This is the constructor that you have to use for retrieve tickets applying cold start.
-     * @param projectName The project name from which retrieve tickets.
+     * @param projName The project name from which retrieve tickets.
      * @param coldStart The value used to specifying that you are using cold start. Must be true.
      */
-    public TicketRetriever(String projectName, boolean coldStart) throws GitAPIException {
+    public TicketRetriever(String projName, boolean coldStart) throws GitAPIException, IOException, URISyntaxException {
         this.coldStart = coldStart;
-        init(projectName);
+        init(projName);
     }
-    
-    private void init(String projectName) throws GitAPIException {
 
+    private void init(String projName) throws GitAPIException, IOException, URISyntaxException {
         String issueType = "Bug";
-        String state = "closed";
+        String status = "closed";
         String resolution = "fixed";
 
-        try {
-            versionRetriever = new VersionRetriever(projectName);
-            tickets = retrieveBugTickets(projectName, issueType, state, resolution);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        versionRetriever = new VersionRetriever(projName);
+        tickets = retrieveBugTickets(projName, issueType, status, resolution);
+
     }
 
-    private void setReleaseInTicket(@NotNull Ticket ticket){
-
-        Version openingRelease = VersionUtil.retrieveNextRelease(versionRetriever, ticket.getTicketCreationDate());
-        Version fixRelease = VersionUtil.retrieveNextRelease(versionRetriever , ticket.getTicketResolutionDate());
+    /**Set OV and FV of the ticket. IV will retrieve from AV takes from Jira or takes applying proportion.*/
+    private void setReleaseInTicket(@NotNull Ticket ticket) {
+        Version openingRelease = VersionUtil.retrieveNextRelease(versionRetriever, ticket.getCreationDate());
+        Version fixRelease = VersionUtil.retrieveNextRelease(versionRetriever, ticket.getResolutionDate());
 
         ticket.setOpeningRelease(openingRelease);
         ticket.setFixedRelease(fixRelease);
-
     }
 
-    private @NotNull List<Ticket> retrieveBugTickets(String projectName, String issueType, String state, String resolution) throws IOException, JSONException, GitAPIException {
+    public  @NotNull List<Ticket> retrieveBugTickets(String projName, String issueType, String status, String resolution) throws IOException, JSONException, GitAPIException, URISyntaxException {
 
-        int i = 0;
         int j;
+        int i = 0;
         int total;
         ArrayList<Ticket> consistentTickets = new ArrayList<>();
         ArrayList<Ticket> inconsistentTickets = new ArrayList<>();
-
+        //Get JSON API for closed bugs w/ AV in the project
         do {
             //Only gets a max of 1000 at a time, so must do this multiple times if bugs >1000
             j = i + 1000;
             String url = "https://issues.apache.org/jira/rest/api/2/search?jql=project=%22"
-                    + projectName + "%22AND%22issueType%22=%22" + issueType + "%22AND(%22status%22=%22" + state + "%22OR"
+                    + projName + "%22AND%22issueType%22=%22" + issueType + "%22AND(%22status%22=%22" + status + "%22OR"
                     + "%22status%22=%22resolved%22)AND%22resolution%22=%22" + resolution + "%22&fields=key,resolutiondate,versions,created&startAt="
                     + i + "&maxResults=" + j;
             JSONObject json = JSONUtils.readJsonFromUrl(url);
@@ -96,32 +88,28 @@ public class TicketRetriever {
                 String key = issues.getJSONObject(i%1000).get("key").toString();
                 String resolutionDate = issues.getJSONObject(i%1000).getJSONObject(FIELDS).get("resolutiondate").toString();
                 String creationDate = issues.getJSONObject(i%1000).getJSONObject(FIELDS).get("created").toString();
-                List<Version> releases = versionRetriever.getAffectedVersion(issues.getJSONObject(i%1000).getJSONObject(FIELDS).getJSONArray("versions"));
+                List<Version> releases = versionRetriever.getAffectedVersions(issues.getJSONObject(i%1000).getJSONObject(FIELDS).getJSONArray("versions"));
                 Ticket ticket = new Ticket(creationDate, resolutionDate, key, releases, versionRetriever);
                 setReleaseInTicket(ticket);
-                //Discard incorrect ticket or that are after the last release
-                if(ticket.getOpeningRelease() == null ||
+                //Discard tickets that are incorrect or that are after the last release
+                if (ticket.getOpeningRelease() == null ||
                         (ticket.getInjectedRelease() != null &&
                                 (ticket.getInjectedRelease().getIndex() > ticket.getOpeningRelease().getIndex())) ||
                         ticket.getFixedRelease() == null)
                     continue;
-                //If the ticket doesn't have the fixed release, the ticket will be discarded
-                addTicket(ticket, consistentTickets, inconsistentTickets);
-
+                addTicket(ticket, consistentTickets, inconsistentTickets); //Add the ticket to the consistent or inconsistent list, based on the consistency check
             }
         } while (i < total);
 
         if(!coldStart) {
-            consistentTickets.sort(Comparator.comparing(Ticket::getTicketResolutionDate));
             adjustInconsistentTickets(inconsistentTickets, consistentTickets); //Adjust the inconsistency tickets using proportion for missing IV, when you are not using cold start
-            consistentTickets.sort(Comparator.comparing(Ticket::getTicketResolutionDate));
-            if(commitRetriever == null){
-                commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projectName.toLowerCase(), versionRetriever);
+            consistentTickets.sort(Comparator.comparing(Ticket::getCreationDate));
+            if(commitRetriever == null) {
+                commitRetriever = new CommitRetriever("/home/alessandro/Documenti/GitRepositories/" + projName.toLowerCase(), versionRetriever);
             }
             commitRetriever.associateTicketAndCommit(consistentTickets);
         }
-
-        discardInvalidTicket(consistentTickets);
+        discardInvalidTicket(consistentTickets); //Discard the tickets that aren't consistent yet
 
         return consistentTickets;
     }
@@ -129,44 +117,37 @@ public class TicketRetriever {
     /**Discard tickets that have OV > FV or that have IV=OV*/
     private void discardInvalidTicket(@NotNull ArrayList<Ticket> tickets) {
         tickets.removeIf(ticket -> ticket.getOpeningRelease().getIndex() > ticket.getFixedRelease().getIndex() ||   //Discard if OV > FV
-                ticket.getInjectedRelease().getIndex() >= ticket.getOpeningRelease().getIndex() ||
-                (ticket.getOpeningRelease() == null || ticket.getFixedRelease() == null)); //Discard if IV >= OV
+                ticket.getInjectedRelease().getIndex() >= ticket.getOpeningRelease().getIndex() || //Discard if IV >= OV
+                (ticket.getOpeningRelease() == null || ticket.getFixedRelease() == null)); //Discard if there is a new version after the creation or the fix of the ticket
     }
 
-    // Make consistency the inconsistency ticket
-    private void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull ArrayList<Ticket> consistentTickets) throws GitAPIException {
-
+    /**Make consistency the inconsistency tickets.*/
+    private  void adjustInconsistentTickets(@NotNull List<Ticket> inconsistentTickets, @NotNull List<Ticket> consistentTickets) throws GitAPIException, IOException, URISyntaxException {
         List<Ticket> ticketForProportion = new ArrayList<>();
         List<Ticket> allTickets = new ArrayList<>();
 
         allTickets.addAll(inconsistentTickets);
         allTickets.addAll(consistentTickets);
 
-        allTickets.sort(Comparator.comparing(Ticket::getTicketResolutionDate));
+        allTickets.sort(Comparator.comparing(Ticket::getResolutionDate));
 
-        double oldValue = 0;
-        for(Ticket ticket: allTickets){
+        for(Ticket ticket: allTickets) {
             double proportionValue;
-            if(inconsistentTickets.contains(ticket)){
+            if(inconsistentTickets.contains(ticket)) {  //If the ticket is in the inconsistent tickets list, then adjust the ticket using proportion.
                 proportionValue = incrementalProportion(ticketForProportion);
-                /*if(oldValue != proportionValue){
-                    System.out.println(proportionValue);
-                }
-                oldValue = proportionValue;*/
-                fixTicket(ticket, proportionValue);
-            } else if (consistentTickets.contains(ticket)) {
-                if (Proportion.isAValidTicketForProportion(ticket)) ticketForProportion.add(ticket);
+                adjustTicket(ticket, proportionValue); //Use proportion to compute the IV.
+            } else if(consistentTickets.contains(ticket) && Proportion.isAValidTicketForProportion(ticket)) {
+                ticketForProportion.add(ticket);
             }
-            if(!isNotConsistent(ticket)){
-                throw new RuntimeException();
+            if(isNotConsistent(ticket)) {
+                continue; //Case when the ticket is still inconsistent.
             }
-            if(!consistentTickets.add(ticket)) {
-                consistentTickets.add(ticket);
-            }
+            if(!consistentTickets.contains(ticket))
+                consistentTickets.add(ticket); //Add the adjusted ticket to the consistent list.
         }
     }
 
-    private static double incrementalProportion(@NotNull List<Ticket> consistentTickets) throws GitAPIException {
+    private static double incrementalProportion(@NotNull List<Ticket> consistentTickets) throws GitAPIException, IOException, URISyntaxException {
         double proportionValue;
 
         if(consistentTickets.size() >= 5) {
@@ -177,23 +158,19 @@ public class TicketRetriever {
         return proportionValue;
     }
 
-    private void fixTicket(Ticket ticket, double proportionValue){
-
+    private void adjustTicket(Ticket ticket, double proportionValue) {
+        //Assign the new injected version for the inconsistent ticket as max(0, FV-(FV-OV)*P)
         Version ov = ticket.getOpeningRelease();
         Version fv = ticket.getFixedRelease();
         int newIndex;
-
-        if(Objects.equals(fv.getIndex(), ov.getIndex())){
+        if(fv.getIndex() == ov.getIndex()) {
             newIndex = (int) Math.floor(fv.getIndex() - proportionValue);
-        }else{
+        } else {
             newIndex = (int) Math.floor(fv.getIndex() - (fv.getIndex() - ov.getIndex()) * proportionValue);
         }
-
-        if(newIndex < 0){
+        if(newIndex < 0)
             newIndex = 0;
-        }
-        ticket.setInjectedRelease(versionRetriever.getProjectVersions().get(newIndex));
-
+        ticket.setInjectedRelease(versionRetriever.projVersions.get(newIndex));
     }
 
     /**
@@ -202,51 +179,33 @@ public class TicketRetriever {
      * @param consistentTickets Consistent ticket list where adding consistent ticket.
      * @param inconsistentTickets Inconsistent ticket list where adding inconsistent ticket.
      */
-    private static void addTicket(Ticket ticket, ArrayList<Ticket> consistentTickets, ArrayList<Ticket> inconsistentTickets){
-
-        // IV <= OV <= FV, IV = AV[0]
-        // If condition is false, we have an inconsistency ticket
-
-        if(!isNotConsistent(ticket))
+    private static void addTicket(Ticket ticket, ArrayList<Ticket> consistentTickets, ArrayList<Ticket> inconsistentTickets) {
+        if(isNotConsistent(ticket)) {
             inconsistentTickets.add(ticket);
-        else
+        } else {
             consistentTickets.add(ticket);
-
+        }
     }
 
-    private static boolean isNotConsistent(Ticket ticket){
-
+    private static boolean isNotConsistent(Ticket ticket) {
         Version iv = ticket.getInjectedRelease();
         Version ov = ticket.getOpeningRelease();
         Version fv = ticket.getFixedRelease();
 
-        return iv != null && iv.getIndex() <= ov.getIndex() && ov.getIndex() <= fv.getIndex();
+        return (iv == null) ||
+                (iv.getIndex() > ov.getIndex()) ||
+                (ov.getIndex() > fv.getIndex());
+    }
 
+    public List<Ticket> getTickets() {
+        return tickets;
+    }
+
+    public CommitRetriever getCommitRetriever() {
+        return commitRetriever;
     }
 
     public VersionRetriever getVersionRetriever() {
         return versionRetriever;
     }
-
-    public void setVersionRetriever(VersionRetriever versionRetriever) {
-        this.versionRetriever = versionRetriever;
-    }
-
-
-    public List<Ticket> getTickets(){
-        return this.tickets;
-    }
-
-    public void setTickets(List<Ticket> tickets){
-        this.tickets = tickets;
-    }
-
-    public void setCommitRetriever(CommitRetriever commitRetriever){
-        this.commitRetriever = commitRetriever;
-    }
-
-    public CommitRetriever getCommitRetriever(){
-        return this.commitRetriever;
-    }
-
 }

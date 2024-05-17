@@ -1,10 +1,11 @@
 package view;
 
-import enums.FilenamesEnum;
+import enums.*;
 import model.ClassifierEvaluation;
 import model.JavaClass;
 import model.ReleaseInfo;
 import org.jetbrains.annotations.NotNull;
+import utils.AcumeUtils;
 import utils.FileUtils;
 import java.io.File;
 import java.io.FileWriter;
@@ -16,21 +17,77 @@ public class FileCreator {
 
     private FileCreator() {}
 
+    public static void writeCsvForAcume(String projectName, ClassifierEnum classifierEnum, FeatureSelectionEnum featureSelectionEnum, SamplingEnum samplingEnum, CostSensitiveEnum costSensitiveEnum, Integer index, List<AcumeUtils> acumeUtils) throws IOException {
+
+        String fileName = projectName.toUpperCase() + "_" + classifierEnum.toString().toUpperCase() + "_" + featureSelectionEnum.toString().toUpperCase() + "_" + samplingEnum.toString().toUpperCase() + "_" + costSensitiveEnum.toString().toUpperCase() + "_" + index.toString();
+        File file = createANewFileAcume(projectName, fileName, FilenamesEnum.ACUME, index);
+
+        writeOnCsvAcume(file, acumeUtils);
+
+    }
+
+    private static @NotNull File createANewFileAcume(String projectName, String fileName, FilenamesEnum fileEnum, int fileIndex) throws IOException {
+        String enumFilename = FileUtils.enumToFilename(fileEnum, fileIndex);
+        Path dirPath = Path.of("retrieved_data/" + projectName + "/acume/");
+        return getFile(fileName, ".csv", enumFilename, dirPath, true);
+    }
+
+    private static @NotNull File getFile(String projName, String endPath, String enumFilename, Path dirPath, boolean acume) throws IOException {
+
+        Path pathname;
+
+        if(!acume) {
+            pathname = Path.of(dirPath.toString(), projName + enumFilename + endPath);
+        }else{
+            projName = projName + ".csv";
+            pathname = Path.of(dirPath.toString(), projName);
+        }
+
+        return getFile(dirPath, pathname);
+    }
+
+    private static void writeOnCsvAcume(File file, List<AcumeUtils> acumeUtilsList) throws IOException {
+
+        try(FileWriter fileWriter = new FileWriter(file)) {
+
+            fileWriter.write("ID," + "Size," + "Predicted," + "Actual");
+
+            fileWriter.write("\n");
+
+            for(AcumeUtils acumeUtils : acumeUtilsList) {
+
+                fileWriter.write(acumeUtils.getIndex() + ",");                          //INDEX OF CLASS
+                fileWriter.write(acumeUtils.getSize() + ",");                           //SIZE OF CLASS
+                fileWriter.write(acumeUtils.getProbabilityOfBuggyness() + ",");         //PROBABILITY OF BUGGY
+                fileWriter.write(acumeUtils.isBuggy());
+
+                fileWriter.write("\n");
+
+            }
+
+        }
+
+    }
+
     private static @NotNull File createANewFile(String projName, FilenamesEnum fileEnum, int fileIndex, String endPath) throws IOException {
         String enumFilename = FileUtils.enumToFilename(fileEnum, fileIndex);
         Path dirPath = Path.of("retrieved_data/", projName, FileUtils.enumToDirectoryName(fileEnum));
 
         Path pathname = Path.of(dirPath.toString(), projName + enumFilename + endPath);
 
+        return getFile(dirPath, pathname);
+    }
+
+    private static @NotNull File getFile(Path dirPath, Path pathname) throws IOException {
         File dir = new File(dirPath.toUri());
         File file = new File(pathname.toUri());
 
         if(!dir.exists() && !file.mkdirs()) {
-            throw new RuntimeException();                                           //Exception: dir creation impossible
+            throw new RuntimeException(); //Exception: dir creation impossible
         }
 
         if(file.exists() && !file.delete()) {
-            throw new IOException();                                                //Exception: file deletion impossible
+            throw new IOException(); //Exception: file deletion impossible
         }
 
         return file;
@@ -70,10 +127,9 @@ public class FileCreator {
             for(JavaClass javaClass: releaseInfo.getJavaClasses()) {
 
                 if(!isArff) {
-                    fw.write(releaseInfo.getRelease().getIndex() + ",");                    //VERSION
-                    fw.write(javaClass.getName() + ",");                                    //JAVA_CLASS
+                    fw.write(releaseInfo.getRelease().getIndex() + ","); //VERSION
+                    fw.write(javaClass.getName() + ","); //JAVA_CLASS
                 }
-
                 fw.write(javaClass.getMetrics().getSize() + ",");                           //SIZE
                 fw.write(javaClass.getMetrics().getLocAdded() + ",");                       //LOC_ADDED
                 fw.write(javaClass.getMetrics().getMaxLocAdded() + ",");                    //MAX_LOC_ADDED

@@ -1,10 +1,11 @@
 package utils;
 
-import model.Version;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.NotNull;
-import retrievers.VersionRetriever;
 import model.ReleaseInfo;
+import model.Version;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import retrievers.VersionRetriever;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -12,18 +13,8 @@ public class VersionUtil {
 
     private VersionUtil() {}
 
-    public static void printVersion(List<Version> versionList) {
-        for(Version version: versionList) {
-            System.out.println("Version: "
-                    + version.getIndex() + ", "
-                    + version.getId() + ", "
-                    + version.getName() + ", "
-                    + version.getDate());
-        }
-    }
-
     public static @Nullable Version retrieveNextRelease(VersionRetriever versionRetriever, LocalDate date) {
-        for(Version version : versionRetriever.getProjectVersions()) {
+        for(Version version : versionRetriever.getProjVersions()) {
             LocalDate releaseDate = version.getDate();
             if(!releaseDate.isBefore(date)) {
                 return version;
@@ -48,5 +39,4 @@ public class VersionUtil {
 
         return null;
     }
-
 }

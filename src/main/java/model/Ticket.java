@@ -11,19 +11,19 @@ import java.util.List;
 public class Ticket {
 
     private String key;
-    private LocalDate ticketCreationDate;
-    private LocalDate ticketResolutionDate;
+    private LocalDate creationDate;
+    private LocalDate resolutionDate;
     private List<Version> affectedReleases;
-    private List<RevCommit> associatedCommits;
     private Version openingRelease;
     private Version fixedRelease;
     private Version injectedRelease;
     private VersionRetriever versionRetriever;
+    private List<RevCommit> associatedCommits;
     private RevCommit lastCommit;
 
     public Ticket(@NotNull String creationDate, @NotNull String resolutionDate, String key, List<Version> affectedReleases, @NotNull VersionRetriever versionRetriever) {
-        this.ticketCreationDate = LocalDate.parse(creationDate.substring(0, 10));
-        this.ticketResolutionDate = LocalDate.parse(resolutionDate.substring(0, 10));
+        this.creationDate = LocalDate.parse(creationDate.substring(0, 10));
+        this.resolutionDate = LocalDate.parse(resolutionDate.substring(0, 10));
         this.key = key;
         setVersionRetriever(versionRetriever);
         setInjectedRelease(affectedReleases);
@@ -33,32 +33,25 @@ public class Ticket {
         this.versionRetriever = versionRetriever;
     }
 
-    public LocalDate getTicketCreationDate() {
-        return ticketCreationDate;
+    public LocalDate getCreationDate() {
+        return creationDate;
     }
 
-    public LocalDate getTicketResolutionDate() {
-        return ticketResolutionDate;
-    }
-
-    public void setAssociatedCommits(@NotNull List<RevCommit> associatedCommits){
-
+    public void setAssociatedCommits(@NotNull List<RevCommit> associatedCommits) {
         this.associatedCommits = associatedCommits;
 
-        if(associatedCommits.isEmpty())
-            return;
+        if(associatedCommits.isEmpty()) return;
 
-        RevCommit revCommit = associatedCommits.get(0);
-
+        RevCommit com = associatedCommits.get(0);
         for(RevCommit commit: associatedCommits){
-            if(commit.getCommitterIdent().getWhen().after(revCommit.getCommitterIdent().getWhen())) revCommit = commit;
+            if(commit.getCommitterIdent().getWhen().after(com.getCommitterIdent().getWhen())) com = commit;
         }
 
-        this.lastCommit = revCommit;
+        this.lastCommit = com;
     }
 
-    public List<RevCommit> getAssociatedCommits() {
-        return this.associatedCommits;
+    public LocalDate getResolutionDate() {
+        return resolutionDate;
     }
 
     public String getKey() {
@@ -81,6 +74,10 @@ public class Ticket {
         return fixedRelease;
     }
 
+    public List<RevCommit> getAssociatedCommits() {
+        return associatedCommits;
+    }
+
     public void setFixedRelease(Version fixedRelease) {
         this.fixedRelease = fixedRelease;
         computeAffectedRelease();
@@ -94,7 +91,6 @@ public class Ticket {
         this.injectedRelease = release;
         computeAffectedRelease();
     }
-
 
     private void setInjectedRelease(@NotNull List<Version> affectedReleases) {
         if(!affectedReleases.isEmpty()) {
@@ -110,9 +106,9 @@ public class Ticket {
         if(this.injectedRelease == null || this.fixedRelease == null) return;
 
         List<Version> releases = new ArrayList<>();
-        for (Version versionInfo : versionRetriever.getProjectVersions()) {
-            if ((versionInfo.getIndex() >= this.injectedRelease.getIndex()) && (versionInfo.getIndex() < this.fixedRelease.getIndex())) {
-                releases.add(versionInfo);
+        for (Version version : versionRetriever.getProjVersions()) {
+            if ((version.getIndex() >= this.injectedRelease.getIndex()) && (version.getIndex() < this.fixedRelease.getIndex())) {
+                releases.add(version);
             }
         }
 

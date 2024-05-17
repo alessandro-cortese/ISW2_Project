@@ -1,10 +1,10 @@
-Project Assumption:
-- I perform the calculation of proportion by considering the denominator of the formula equal to 1 in the case where the issues have OV == FV;
-- I round th index of the injected release calculated with proportion by defect;
-- I assume that tickets resolved on the same on the same day as the release of a new release are resolved in that release;
-- I calculate the fixed version as the version after the resolutionDate of the ticket and the opening version how the next version of createDate on Jira;
-- To sort versions I take their release date as a reference;
-- If multiple tickets are mentioned in a commit, I consider the commit as resolving all the tickets mentioned;
-- I calculate the incremental proportion value using all valid tickets prior to the ticket I am considering. A ticket is valid if it has iv < ov < fv;
-- Empty or comment LOCs are also considered in the calculation of LOCs;
-- SMOTE is used only if the number of instances is bigger than 1. By default it needs at least 5 true instances, but I added a control that adjusts this number dynamically.
+Assumptions:
+- I perform the calculation of proportion by considering the denominator of the formula equal to 1 in the case where issues have OV == FV.
+- I round the index of the injected release calculated with proportion by default.
+- I assume that tickets resolved on the same day as a new release are resolved in that release.
+- I calculate the fixed version as the version following the resolutionDate of the ticket on Jira and the opening version as the version following the createDate of the ticket on Jira.
+- To order the versions I take their release date as a reference.
+- If more than one ticket is mentioned in a commit, I consider the commit as resolving all the tickets mentioned.
+- I calculate the incremental proportion value using all valid tickets prior to the ticket I am considering. A ticket is valid if it has iv < ov < fv.
+- Empty or comment LOCs are also considered in the calculation of LOCs.
+- SMOTE is used only if the number of true instances is greater than 1. By default it needs at least 5 true instances, but I have added a control that adjusts this number dynamically.

@@ -3,6 +3,7 @@ package retrievers;
 import enums.*;
 import model.ClassifierEvaluation;
 import org.jetbrains.annotations.NotNull;
+import utils.AcumeUtils;
 import utils.FileUtils;
 import weka.attributeSelection.BestFirst;
 import weka.classifiers.Classifier;
@@ -13,7 +14,6 @@ import weka.classifiers.lazy.IBk;
 import weka.classifiers.meta.CostSensitiveClassifier;
 import weka.classifiers.meta.FilteredClassifier;
 import weka.classifiers.trees.RandomForest;
-import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ConverterUtils.DataSource;
@@ -25,6 +25,8 @@ import weka.filters.supervised.instance.SpreadSubsample;
 
 import java.nio.file.Path;
 import java.util.*;
+
+import static view.FileCreator.writeCsvForAcume;
 
 public class WekaInfoRetriever {
 
@@ -51,11 +53,8 @@ public class WekaInfoRetriever {
                     for (SamplingEnum samplingEnum : SamplingEnum.values()) {                                                                   //Iterate on all sampling mode
                         for (CostSensitiveEnum costSensitiveEnum : CostSensitiveEnum.values()) {                                                //Iterate on all cost sensitive mode
                             //Evaluate the classifier
-                            /*System.out.println("Project: " + projName + "\nClassifier:" + classifierName.name() + "\nFeature Selection: " + featureSelectionEnum.name()
-                            + "\nSampling: " + samplingEnum.name() + "\nCost: " + costSensitiveEnum.name());*/
                             classifiersListMap.get(classifierName.name())                                                                       //Get the list associated to the actual classifier
-                                    .add(useClassifier(i, projName, classifierName, featureSelectionEnum, samplingEnum, costSensitiveEnum));//Evaluate the classifier
-
+                                    .add(useClassifier(i, projName, classifierName, featureSelectionEnum, samplingEnum, costSensitiveEnum));    //Evaluate the classifier
                         }
                     }
                 }
@@ -74,6 +73,7 @@ public class WekaInfoRetriever {
     private @NotNull ClassifierEvaluation useClassifier(int index, String projName, ClassifierEnum classifierName, @NotNull FeatureSelectionEnum featureSelection, @NotNull SamplingEnum sampling, CostSensitiveEnum costSensitive) throws Exception {
 
         Classifier classifier = getClassifierByEnum(classifierName);
+
         DataSource source1 = new DataSource(Path.of("retrieved_data", projName, "training", FileUtils.getArffFilename(FilenamesEnum.TRAINING, projName, index)).toString());
         DataSource source2 = new DataSource(Path.of("retrieved_data", projName, "testing",  FileUtils.getArffFilename(FilenamesEnum.TESTING, projName, index)).toString());
         Instances training = source1.getDataSet();
@@ -147,7 +147,6 @@ public class WekaInfoRetriever {
 
         //COST SENSITIVE
         if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.SENSITIVE_LEARNING) {
-
             //COST SENSITIVE WITH SENSITIVE LEARNING
             CostSensitiveClassifier costSensitiveClassifier = new CostSensitiveClassifier();
             costSensitiveClassifier.setMinimizeExpectedCost(true);
@@ -156,35 +155,46 @@ public class WekaInfoRetriever {
             costSensitiveClassifier.setClassifier(classifier);
 
             classifier = costSensitiveClassifier;
-
         }
 
         classifier.buildClassifier(training);
+        eval.evaluateModel(classifier, testing);
+        ClassifierEvaluation classifierEvaluation = new ClassifierEvaluation(this.projName, index, classifierName.name(), featureSelection, sampling, costSensitive);
+        classifierEvaluation.setTrainingPercent(100.0 * training.numInstances() / (training.numInstances() + testing.numInstances()));
+        classifierEvaluation.setPrecision(eval.precision(0));
+        classifierEvaluation.setRecall(eval.recall(0));
+        classifierEvaluation.setAuc(eval.areaUnderROC(0));
+        classifierEvaluation.setKappa(eval.kappa());
+        classifierEvaluation.setTp(eval.numTruePositives(0));
+        classifierEvaluation.setFp(eval.numFalsePositives(0));
+        classifierEvaluation.setTn(eval.numTrueNegatives(0));
+        classifierEvaluation.setFn(eval.numFalseNegatives(0));
 
-        //Get probability of classes
+        String size = "SIZE";
+        String isBuggy = "IS_BUGGY";
 
-        /*int trueClassifierIndex = training.classAttribute().indexOfValue("True");
+        List<AcumeUtils> acumeUtilsList = new ArrayList<>();
 
-        for(int i = 0; i < training.numInstances(); i++){
+        int sizeIndex = testing.attribute(size).index();
+        int isBuggyIndex = testing.attribute(isBuggy).index();
 
-            Instance instance = training.instance(i);
-            double[] distribution = classifier.distributionForInstance(instance);
-            System.out.println("Probability for instance: " + i + " " + distribution[trueClassifierIndex]);
+        int trueClassifierIndex = testing.classAttribute().indexOfValue("True");
 
-        }*/
+        if(trueClassifierIndex != -1){
+            for (int i = 0; i < testing.numInstances(); i++) {
+                int sizeValue = (int) testing.instance(i).value(sizeIndex);
+                int valueIndex = (int) testing.instance(i).value(isBuggyIndex);
+                String buggy =  testing.attribute(isBuggyIndex).value(valueIndex);
+                double[] distribution = classifier.distributionForInstance(testing.instance(i));
+                AcumeUtils acumeUtils = new AcumeUtils(i, sizeValue, distribution[trueClassifierIndex], buggy);
+                acumeUtilsList.add(acumeUtils);
+            }
+
+        }
+        writeCsvForAcume(projName, classifierName, featureSelection, sampling, costSensitive, index, acumeUtilsList);
 
 
-        ClassifierEvaluation simpleRandomForest = new ClassifierEvaluation(this.projName, index, classifierName.name(), featureSelection, sampling, costSensitive);
-        simpleRandomForest.setTrainingPercent(100.0 * training.numInstances() / (training.numInstances() + testing.numInstances()));
-        simpleRandomForest.setPrecision(eval.precision(0));
-        simpleRandomForest.setRecall(eval.recall(0));
-        simpleRandomForest.setAuc(eval.areaUnderROC(0));
-        simpleRandomForest.setKappa(eval.kappa());
-        simpleRandomForest.setTp(eval.numTruePositives(0));
-        simpleRandomForest.setFp(eval.numFalsePositives(0));
-        simpleRandomForest.setTn(eval.numTrueNegatives(0));
-        simpleRandomForest.setFn(eval.numFalseNegatives(0));
-        return simpleRandomForest;
+        return classifierEvaluation;
     }
 
     @NotNull

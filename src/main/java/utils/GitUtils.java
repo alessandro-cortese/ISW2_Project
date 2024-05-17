@@ -1,5 +1,7 @@
 package utils;
 
+import model.ReleaseInfo;
+import model.Version;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -8,12 +10,10 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.util.Date;
-import java.util.List;
-import model.ReleaseInfo;
-import model.Version;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 public class GitUtils {
 
@@ -40,7 +40,7 @@ public class GitUtils {
             LocalDate commitDate = commit.getCommitterIdent().getWhen().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
             //if firstDate < commitDate <= lastDate then add the commit in matchingCommits list
-            if(commitDate.isAfter(firstDate) && (!commitDate.isAfter(lastDate))) {
+            if(commitDate.isAfter(firstDate) && !commitDate.isAfter(lastDate)) {
                 matchingCommits.add(commit);
             }
 
@@ -51,7 +51,6 @@ public class GitUtils {
         RevCommit lastCommit = getLastCommit(matchingCommits);
 
         return new ReleaseInfo(release, matchingCommits, lastCommit);
-
     }
 
     private static RevCommit getLastCommit(List<RevCommit> commitsList) {
@@ -66,13 +65,9 @@ public class GitUtils {
         return lastCommit;
     }
 
-    public static Repository getRepository(String repoPath) {
-        try{
-            FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder();
-            return repositoryBuilder.setGitDir(new File(repoPath + "/.git")).build();
-        }catch (IOException e){
-            throw new RuntimeException(e);
-        }
+    public static Repository getRepository(String repoPath) throws IOException {
+        FileRepositoryBuilder repositoryBuilder = new FileRepositoryBuilder();
+        return repositoryBuilder.setGitDir(new File(repoPath + "/.git")).build();
 
     }
 

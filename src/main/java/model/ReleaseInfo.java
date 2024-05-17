@@ -4,45 +4,56 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.util.List;
 
+
 public class ReleaseInfo {
 
     private final Version release;
     private final List<RevCommit> commits;
     private final RevCommit lastCommit;
+    /**Classes that were present when the release was deployed; they are the classes presented in the last commit
+     *
+     */
     private List<JavaClass> javaClasses;
     private int buggyClasses;
 
-    //Classes that were present when the release was deployed;
-    //they are represented by their name and their content.
-
-
-    public ReleaseInfo(Version versionInfo, List<RevCommit> commits, RevCommit lastCommit){
-
-        this.release = versionInfo;
+    public ReleaseInfo(Version release, List<RevCommit> commits, RevCommit lastCommit) {
+        this.release = release;
         this.commits = commits;
         this.lastCommit = lastCommit;
         this.javaClasses = null;
-
     }
 
+    /**
+     * @return the release
+     */
     public Version getRelease() {
         return release;
     }
 
-
+    /**
+     * @return the commits
+     */
     public List<RevCommit> getCommits() {
         return commits;
     }
 
-
+    /**
+     * @return the lastCommit
+     */
     public RevCommit getLastCommit() {
         return lastCommit;
     }
 
+    /**
+     * @return the javaClasses
+     */
     public List<JavaClass> getJavaClasses() {
         return javaClasses;
     }
 
+    /**
+     * @param javaClasses the javaClasses to set
+     */
     public void setJavaClasses(List<JavaClass> javaClasses) {
         this.javaClasses = javaClasses;
     }

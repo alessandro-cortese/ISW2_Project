@@ -1,26 +1,37 @@
 package model;
 
-import org.jetbrains.annotations.NotNull;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.jetbrains.annotations.NotNull;
+
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDate;
 
 public class Version {
+    String id;
+    int index;
+    String name;
+    LocalDate date;
+    List<RevCommit> commitList = new ArrayList<>();
 
-    private String id;
-    private Integer index;
-    private String name;
-    private LocalDate date;
-    private List<RevCommit> commitList = new ArrayList<>();
+    public String getId() {
+        return id;
+    }
 
-    public Version(String id, String name, Integer index, @NotNull LocalDate date){
+    public String getName() {
+        return name;
+    }
 
-        this.id = id;
-        this.name = name;
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
         this.index = index;
-        this.date = date;
-
     }
 
     public boolean isCommitListEmpty() {
@@ -31,43 +42,9 @@ public class Version {
         this.commitList.add(commit);
     }
 
-    public Version(String id, String name, @NotNull LocalDate date){
-
+    public Version(String id, String name, @NotNull LocalDate date) {
         this.id = id;
         this.name = name;
-        this.date = date;
-
-    }
-
-    public String getId() {
-        return this.id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Integer getIndex() {
-        return this.index;
-    }
-
-    public void setIndex(Integer index) {
-        this.index = index;
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public LocalDate getDate() {
-        return this.date;
-    }
-
-    public void setDate(LocalDate date) {
         this.date = date;
     }
 }

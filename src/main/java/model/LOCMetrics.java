@@ -6,9 +6,6 @@ public class LOCMetrics {
     private int loc;
     private double avgLoc;
 
-    public LOCMetrics() {
-    }
-
     public LOCMetrics(int maxLoc, int loc, double avgLoc) {
         this.maxLoc = maxLoc;
         this.loc = loc;

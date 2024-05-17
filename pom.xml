@@ -11,11 +11,11 @@
     <properties>
         <maven.compiler.source>20</maven.compiler.source>
         <maven.compiler.target>20</maven.compiler.target>
-             
+
         <sonar.organization>alessandro-cortese</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-             
-         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
