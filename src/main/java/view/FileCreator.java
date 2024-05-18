@@ -88,17 +88,23 @@ public class FileCreator {
             throw new ImpossibleDirectoryCreationException();               //Exception: dir creation impossible
         }
 
-        boolean exist = file.exists();
-        boolean isDeleted = file.delete();
-
-        if(exist && !isDeleted) {
-            throw new IOException();
-        }                                                                   //Exception: file deletion impossible
+        deleteFile(file);
 
         return file;
 
     }
 
+    private static void deleteFile(File file) throws IOException {
+
+        if(file.exists()){
+            boolean deleted = file.delete();
+            if(!deleted) {
+                throw new IOException();
+            }
+        }
+
+    }
+    
     public static void writeOnCsv(String projName, List<ReleaseInfo> rcList, FilenamesEnum csvEnum, int csvIndex) throws IOException, ImpossibleDirectoryCreationException {
 
         File file = createANewFile(projName, csvEnum, csvIndex, ".csv");
