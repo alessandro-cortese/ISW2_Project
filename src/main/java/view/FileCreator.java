@@ -11,6 +11,7 @@ import utils.FileUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.nio.file.Path;
 
@@ -18,7 +19,7 @@ public class FileCreator {
 
     private FileCreator() {}
 
-    public static void writeCsvForAcume(String projectName, ClassifierEnum classifierEnum, FeatureSelectionEnum featureSelectionEnum, SamplingEnum samplingEnum, CostSensitiveEnum costSensitiveEnum, Integer index, List<AcumeUtils> acumeUtils) throws Exception {
+    public static void writeCsvForAcume(String projectName, ClassifierEnum classifierEnum, FeatureSelectionEnum featureSelectionEnum, SamplingEnum samplingEnum, CostSensitiveEnum costSensitiveEnum, Integer index, List<AcumeUtils> acumeUtils) throws IOException, ImpossibleDirectoryCreationException {
 
         String fileName = projectName.toUpperCase() + "_" + classifierEnum.toString().toUpperCase() + "_" + featureSelectionEnum.toString().toUpperCase() + "_" + samplingEnum.toString().toUpperCase() + "_" + costSensitiveEnum.toString().toUpperCase() + "_" + index.toString();
         File file = createANewFileAcume(projectName, fileName, FilenamesEnum.ACUME, index);
@@ -87,7 +88,10 @@ public class FileCreator {
             throw new ImpossibleDirectoryCreationException();               //Exception: dir creation impossible
         }
 
-        if(file.exists() && !file.delete()) {
+        boolean exist = file.exists();
+        boolean isDeleted = file.delete();
+
+        if(exist && !isDeleted) {
             throw new IOException();
         }                                                                   //Exception: file deletion impossible
 
