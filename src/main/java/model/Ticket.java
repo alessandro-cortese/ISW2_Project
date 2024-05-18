@@ -114,4 +114,12 @@ public class Ticket {
 
         this.affectedReleases = releases;
     }
+
+    public RevCommit getLastCommit() {
+        return lastCommit;
+    }
+
+    public void setLastCommit(RevCommit lastCommit) {
+        this.lastCommit = lastCommit;
+    }
 }

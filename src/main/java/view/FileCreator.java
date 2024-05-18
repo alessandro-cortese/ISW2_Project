@@ -1,6 +1,7 @@
 package view;
 
 import enums.*;
+import exceptions.ImpossibleDirectoryCreationException;
 import model.ClassifierEvaluation;
 import model.JavaClass;
 import model.ReleaseInfo;
@@ -17,7 +18,7 @@ public class FileCreator {
 
     private FileCreator() {}
 
-    public static void writeCsvForAcume(String projectName, ClassifierEnum classifierEnum, FeatureSelectionEnum featureSelectionEnum, SamplingEnum samplingEnum, CostSensitiveEnum costSensitiveEnum, Integer index, List<AcumeUtils> acumeUtils) throws IOException {
+    public static void writeCsvForAcume(String projectName, ClassifierEnum classifierEnum, FeatureSelectionEnum featureSelectionEnum, SamplingEnum samplingEnum, CostSensitiveEnum costSensitiveEnum, Integer index, List<AcumeUtils> acumeUtils) throws Exception {
 
         String fileName = projectName.toUpperCase() + "_" + classifierEnum.toString().toUpperCase() + "_" + featureSelectionEnum.toString().toUpperCase() + "_" + samplingEnum.toString().toUpperCase() + "_" + costSensitiveEnum.toString().toUpperCase() + "_" + index.toString();
         File file = createANewFileAcume(projectName, fileName, FilenamesEnum.ACUME, index);
@@ -26,13 +27,13 @@ public class FileCreator {
 
     }
 
-    private static @NotNull File createANewFileAcume(String projectName, String fileName, FilenamesEnum fileEnum, int fileIndex) throws IOException {
+    private static @NotNull File createANewFileAcume(String projectName, String fileName, FilenamesEnum fileEnum, int fileIndex) throws Exception {
         String enumFilename = FileUtils.enumToFilename(fileEnum, fileIndex);
         Path dirPath = Path.of("retrieved_data/" + projectName + "/acume/");
         return getFile(fileName, ".csv", enumFilename, dirPath, true);
     }
 
-    private static @NotNull File getFile(String projName, String endPath, String enumFilename, Path dirPath, boolean acume) throws IOException {
+    private static @NotNull File getFile(String projName, String endPath, String enumFilename, Path dirPath, boolean acume) throws Exception {
 
         Path pathname;
 
@@ -69,7 +70,7 @@ public class FileCreator {
 
     }
 
-    private static @NotNull File createANewFile(String projName, FilenamesEnum fileEnum, int fileIndex, String endPath) throws IOException {
+    private static @NotNull File createANewFile(String projName, FilenamesEnum fileEnum, int fileIndex, String endPath) throws Exception {
         String enumFilename = FileUtils.enumToFilename(fileEnum, fileIndex);
         Path dirPath = Path.of("retrieved_data/", projName, FileUtils.enumToDirectoryName(fileEnum));
 
@@ -78,12 +79,12 @@ public class FileCreator {
         return getFile(dirPath, pathname);
     }
 
-    private static @NotNull File getFile(Path dirPath, Path pathname) throws IOException {
+    private static @NotNull File getFile(Path dirPath, Path pathname) throws Exception {
         File dir = new File(dirPath.toUri());
         File file = new File(pathname.toUri());
 
         if(!dir.exists() && !file.mkdirs()) {
-            throw new RuntimeException(); //Exception: dir creation impossible
+            throw new ImpossibleDirectoryCreationException(); //Exception: dir creation impossible
         }
 
         if(file.exists() && !file.delete()) {
@@ -93,7 +94,7 @@ public class FileCreator {
         return file;
     }
 
-    public static void writeOnCsv(String projName, List<ReleaseInfo> rcList, FilenamesEnum csvEnum, int csvIndex) throws IOException {
+    public static void writeOnCsv(String projName, List<ReleaseInfo> rcList, FilenamesEnum csvEnum, int csvIndex) throws Exception {
 
         File file = createANewFile(projName, csvEnum, csvIndex, ".csv");
 
@@ -156,7 +157,7 @@ public class FileCreator {
         }
     }
 
-    public static void writeEvaluationDataOnCsv(String projName, List<ClassifierEvaluation> classifierEvaluationList) throws IOException {
+    public static void writeEvaluationDataOnCsv(String projName, List<ClassifierEvaluation> classifierEvaluationList) throws Exception {
 
         File file = createANewFile(projName, FilenamesEnum.EVALUATING, 0, ".csv");
 
@@ -199,7 +200,7 @@ public class FileCreator {
         }
     }
 
-    public static void writeOnArff(String projName, List<ReleaseInfo> riList, FilenamesEnum filenamesEnum, int fileIndex) throws IOException {
+    public static void writeOnArff(String projName, List<ReleaseInfo> riList, FilenamesEnum filenamesEnum, int fileIndex) throws Exception {
 
         File file = createANewFile(projName, filenamesEnum, fileIndex, ".arff");
 

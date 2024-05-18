@@ -1,6 +1,7 @@
 package retrievers;
 
 import enums.*;
+import exceptions.NotFindClassifierException;
 import model.ClassifierEvaluation;
 import org.jetbrains.annotations.NotNull;
 import utils.AcumeUtils;
@@ -86,19 +87,14 @@ public class WekaInfoRetriever {
         Evaluation eval = new Evaluation(testing);
 
         //FEATURE SELECTION
-        switch (featureSelection) {
-            case BEST_FIRST_FORWARD -> {
-                //FEATURE SELECTION WITH BEST FIRST FORWARD TECHNIQUE
-                AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 1 -N 5");
+        if (featureSelection == FeatureSelectionEnum.BEST_FIRST_FORWARD) {//FEATURE SELECTION WITH BEST FIRST FORWARD TECHNIQUE
+            AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 1 -N 5");
 
-                classifier = getFilteredClassifier(classifier, filter);
-            }
-            case BEST_FIRST_BACKWARD -> {
-                //FEATURE SELECTION WITH BEST FIRST BACKWARD TECHNIQUE
-                AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 0 -N 5");
+            classifier = getFilteredClassifier(classifier, filter);
+        } else if (featureSelection == FeatureSelectionEnum.BEST_FIRST_BACKWARD) {//FEATURE SELECTION WITH BEST FIRST BACKWARD TECHNIQUE
+            AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 0 -N 5");
 
-                classifier = getFilteredClassifier(classifier, filter);
-            }
+            classifier = getFilteredClassifier(classifier, filter);
         }
 
         int[] nominalCounts = training.attributeStats(training.numAttributes() - 1).nominalCounts;
@@ -226,12 +222,11 @@ public class WekaInfoRetriever {
                 return new NaiveBayes();
             }
             case RANDOM_FOREST -> {
-                //randomForest.setOptions(Utils.splitOptions("-P 100 -I 100 -num-slots 1 -K 0 -M 1.0 -V 0.001 -S 1"));
                 return new RandomForest();
             }
         }
 
-        throw new RuntimeException();
+        throw new NotFindClassifierException();
     }
 
     private static CostMatrix getCostMatrix() {

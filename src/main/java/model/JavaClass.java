@@ -40,4 +40,7 @@ public class JavaClass {
         return metrics;
     }
 
+    public Version getRelease() {
+        return release;
+    }
 }
