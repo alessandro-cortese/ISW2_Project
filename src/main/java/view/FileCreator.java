@@ -89,9 +89,9 @@ public class FileCreator {
         }
 
         boolean exist = file.exists();
-        boolean isDeleted = file.delete();
+        Files.delete(pathname);
 
-        if(exist && !isDeleted) {
+        if(exist) {
             throw new IOException();
         }                                                                   //Exception: file deletion impossible
 

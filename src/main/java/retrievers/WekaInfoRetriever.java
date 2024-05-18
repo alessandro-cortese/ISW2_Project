@@ -76,6 +76,8 @@ public class WekaInfoRetriever {
         return classifierEvaluationList;
     }
 
+    //private addAll(Map<String, List<ClassifierEvaluation>> classifiersListMap, Set<String> classifierEnumList, )
+
     private @NotNull ClassifierEvaluation useClassifier(int index, String projName, ClassifierEnum classifierName, @NotNull FeatureSelectionEnum featureSelection, @NotNull SamplingEnum sampling, CostSensitiveEnum costSensitive) throws Exception {
 
         Classifier classifier = getClassifierByEnum(classifierName);
