@@ -79,16 +79,18 @@ public class FileCreator {
         return getFile(dirPath, pathname);
     }
 
-    private static @NotNull File getFile(Path dirPath, Path pathname) throws Exception {
+    private static @NotNull File getFile(Path dirPath, Path pathname) throws ImpossibleDirectoryCreationException, IOException{
         File dir = new File(dirPath.toUri());
         File file = new File(pathname.toUri());
 
         if(!dir.exists() && !file.mkdirs()) {
-            throw new ImpossibleDirectoryCreationException(); //Exception: dir creation impossible
+            throw new ImpossibleDirectoryCreationException();               //Exception: dir creation impossible
         }
 
-        if(file.exists() && !file.delete()) {
-            throw new IOException(); //Exception: file deletion impossible
+        if(file.exists()) {
+            if(!file.delete()) {
+                throw new IOException();
+            }//Exception: file deletion impossible
         }
 
         return file;
