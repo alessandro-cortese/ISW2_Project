@@ -11,6 +11,7 @@ import utils.FileUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import java.nio.file.Path;
 
@@ -96,15 +97,10 @@ public class FileCreator {
 
     private static void deleteFile(File file) throws IOException {
 
-        if(file.exists()){
-            boolean deleted = file.delete();
-            if(!deleted) {
-                throw new IOException();
-            }
-        }
+        Files.delete(file.toPath());
 
     }
-    
+
     public static void writeOnCsv(String projName, List<ReleaseInfo> rcList, FilenamesEnum csvEnum, int csvIndex) throws IOException, ImpossibleDirectoryCreationException {
 
         File file = createANewFile(projName, csvEnum, csvIndex, ".csv");
