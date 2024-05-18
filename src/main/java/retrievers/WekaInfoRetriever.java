@@ -47,7 +47,7 @@ public class WekaInfoRetriever {
             classifiersListMap.put(classifierName.name(), new ArrayList<>());
         }
 
-        for(int i=1; i<=this.numIter; i++) {                                                                                                    //For each iteration
+        for(int i = 1; i <= this.numIter; i++) {                                                                                                    //For each iteration
 
             for(ClassifierEnum classifierName: ClassifierEnum.values()) {                                                                       //For each classifier
                 for (FeatureSelectionEnum featureSelectionEnum : FeatureSelectionEnum.values()) {                                               //Iterate on all feature selection mode
@@ -63,8 +63,9 @@ public class WekaInfoRetriever {
         }
 
         List<ClassifierEvaluation> classifierEvaluationList = new ArrayList<>();
+        Set<String> classifierEnumList = classifiersListMap.keySet();
 
-        for(String classifierName: classifiersListMap.keySet()) {
+        for(String classifierName: classifierEnumList) {
             classifierEvaluationList.addAll(classifiersListMap.get(classifierName));
         }
 
@@ -213,7 +214,7 @@ public class WekaInfoRetriever {
         return filteredClassifier;
     }
 
-    private @NotNull Classifier getClassifierByEnum(@NotNull ClassifierEnum classifierName) throws Exception {
+    private @NotNull Classifier getClassifierByEnum(@NotNull ClassifierEnum classifierName) throws NotFindClassifierException {
         switch (classifierName) {
             case IBK -> {
                 return new IBk();
