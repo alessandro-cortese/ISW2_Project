@@ -11,7 +11,6 @@ import utils.FileUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.nio.file.Path;
 
@@ -81,6 +80,7 @@ public class FileCreator {
     }
 
     private static @NotNull File getFile(Path dirPath, Path pathname) throws ImpossibleDirectoryCreationException, IOException{
+
         File dir = new File(dirPath.toUri());
         File file = new File(pathname.toUri());
 
@@ -89,16 +89,14 @@ public class FileCreator {
         }
 
         boolean exist = file.exists();
-        System.out.println("Prima");
-        System.out.println("Pathname: " + pathname);
-        Files.delete(pathname);
-        System.out.println("Dopo");
+        boolean isDeleted = file.delete();
 
-        if(exist) {
+        if(exist && !isDeleted) {
             throw new IOException();
         }                                                                   //Exception: file deletion impossible
 
         return file;
+
     }
 
     public static void writeOnCsv(String projName, List<ReleaseInfo> rcList, FilenamesEnum csvEnum, int csvIndex) throws IOException, ImpossibleDirectoryCreationException {

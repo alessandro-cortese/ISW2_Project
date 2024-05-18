@@ -69,14 +69,18 @@ public class WekaInfoRetriever {
         List<ClassifierEvaluation> classifierEvaluationList = new ArrayList<>();
         Set<String> classifierEnumList = classifiersListMap.keySet();
 
-        for(String classifierName: classifierEnumList) {
-            classifierEvaluationList.addAll(classifiersListMap.get(classifierName));
-        }
+        addAll(classifiersListMap, classifierEvaluationList, classifierEnumList);
 
         return classifierEvaluationList;
     }
 
-    //private addAll(Map<String, List<ClassifierEvaluation>> classifiersListMap, Set<String> classifierEnumList, )
+    private void addAll(Map<String, List<ClassifierEvaluation>> classifiersListMap,List<ClassifierEvaluation> classifierEvaluationList, Set<String> classifierEnumList) {
+
+        for(String classifierName: classifierEnumList) {
+            classifierEvaluationList.addAll(classifiersListMap.get(classifierName));
+        }
+
+    }
 
     private @NotNull ClassifierEvaluation useClassifier(int index, String projName, ClassifierEnum classifierName, @NotNull FeatureSelectionEnum featureSelection, @NotNull SamplingEnum sampling, CostSensitiveEnum costSensitive) throws Exception {
 
