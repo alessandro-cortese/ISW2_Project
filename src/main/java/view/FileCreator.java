@@ -89,7 +89,10 @@ public class FileCreator {
         }
 
         boolean exist = file.exists();
+        System.out.println("Prima");
+        System.out.println("Pathname: " + pathname);
         Files.delete(pathname);
+        System.out.println("Dopo");
 
         if(exist) {
             throw new IOException();
