@@ -33,7 +33,7 @@ public class FileCreator {
         return getFile(fileName, ".csv", enumFilename, dirPath, true);
     }
 
-    private static @NotNull File getFile(String projName, String endPath, String enumFilename, Path dirPath, boolean acume) throws Exception {
+    private static @NotNull File getFile(String projName, String endPath, String enumFilename, Path dirPath, boolean acume) throws IOException, ImpossibleDirectoryCreationException {
 
         Path pathname;
 
@@ -70,7 +70,7 @@ public class FileCreator {
 
     }
 
-    private static @NotNull File createANewFile(String projName, FilenamesEnum fileEnum, int fileIndex, String endPath) throws Exception {
+    private static @NotNull File createANewFile(String projName, FilenamesEnum fileEnum, int fileIndex, String endPath) throws IOException, ImpossibleDirectoryCreationException{
         String enumFilename = FileUtils.enumToFilename(fileEnum, fileIndex);
         Path dirPath = Path.of("retrieved_data/", projName, FileUtils.enumToDirectoryName(fileEnum));
 
@@ -87,11 +87,9 @@ public class FileCreator {
             throw new ImpossibleDirectoryCreationException();               //Exception: dir creation impossible
         }
 
-        if(file.exists()) {
-            if(!file.delete()) {
-                throw new IOException();
-            }//Exception: file deletion impossible
-        }
+        if(file.exists() && !file.delete()) {
+            throw new IOException();
+        }                                                               //Exception: file deletion impossible}
 
         return file;
     }
