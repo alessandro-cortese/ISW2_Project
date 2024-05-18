@@ -27,7 +27,7 @@ public class FileCreator {
 
     }
 
-    private static @NotNull File createANewFileAcume(String projectName, String fileName, FilenamesEnum fileEnum, int fileIndex) throws Exception {
+    private static @NotNull File createANewFileAcume(String projectName, String fileName, FilenamesEnum fileEnum, int fileIndex) throws IOException, ImpossibleDirectoryCreationException {
         String enumFilename = FileUtils.enumToFilename(fileEnum, fileIndex);
         Path dirPath = Path.of("retrieved_data/" + projectName + "/acume/");
         return getFile(fileName, ".csv", enumFilename, dirPath, true);
@@ -89,12 +89,12 @@ public class FileCreator {
 
         if(file.exists() && !file.delete()) {
             throw new IOException();
-        }                                                               //Exception: file deletion impossible}
+        }                                                                   //Exception: file deletion impossible
 
         return file;
     }
 
-    public static void writeOnCsv(String projName, List<ReleaseInfo> rcList, FilenamesEnum csvEnum, int csvIndex) throws Exception {
+    public static void writeOnCsv(String projName, List<ReleaseInfo> rcList, FilenamesEnum csvEnum, int csvIndex) throws IOException, ImpossibleDirectoryCreationException {
 
         File file = createANewFile(projName, csvEnum, csvIndex, ".csv");
 
@@ -157,7 +157,7 @@ public class FileCreator {
         }
     }
 
-    public static void writeEvaluationDataOnCsv(String projName, List<ClassifierEvaluation> classifierEvaluationList) throws Exception {
+    public static void writeEvaluationDataOnCsv(String projName, List<ClassifierEvaluation> classifierEvaluationList) throws IOException, ImpossibleDirectoryCreationException {
 
         File file = createANewFile(projName, FilenamesEnum.EVALUATING, 0, ".csv");
 
@@ -200,7 +200,7 @@ public class FileCreator {
         }
     }
 
-    public static void writeOnArff(String projName, List<ReleaseInfo> riList, FilenamesEnum filenamesEnum, int fileIndex) throws Exception {
+    public static void writeOnArff(String projName, List<ReleaseInfo> riList, FilenamesEnum filenamesEnum, int fileIndex) throws IOException, ImpossibleDirectoryCreationException {
 
         File file = createANewFile(projName, filenamesEnum, fileIndex, ".arff");
 
