@@ -193,11 +193,7 @@ public class WekaInfoRetriever {
                 int valueIndex = (int) testing.instance(i).value(isBuggyIndex);
                 String buggyness =  testing.attribute(isBuggyIndex).value(valueIndex);
                 String buggy;
-                if(buggyness.equals("True")){
-                    buggy = "YES";
-                }else{
-                    buggy = "NO";
-                }
+                buggy = writeBuggy(buggyness);
                 double[] distribution = classifier.distributionForInstance(testing.instance(i));
                 AcumeUtils acumeUtils = new AcumeUtils(i, sizeValue, distribution[trueClassifierIndex], buggy);
                 acumeUtilsList.add(acumeUtils);
@@ -207,6 +203,16 @@ public class WekaInfoRetriever {
 
 
         return classifierEvaluation;
+    }
+
+    private String writeBuggy(String buggyness) {
+
+        if(buggyness.equals("True")){
+            return  "YES";
+        }else{
+            return  "NO";
+        }
+
     }
 
     @NotNull
