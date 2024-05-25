@@ -11,9 +11,10 @@ import utils.FileUtils;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import java.nio.file.Path;
+
+import static java.nio.file.Files.delete;
 
 public class FileCreator {
 
@@ -97,7 +98,8 @@ public class FileCreator {
 
     private static void deleteFile(File file) throws IOException {
 
-        Files.delete(file.toPath());
+        if(file.exists())
+            delete(file.toPath());
 
     }
 

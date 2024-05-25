@@ -10085,7 +10085,7 @@ VERSION,JAVA_CLASS,SIZE,LOC_ADDED,MAX_LOC_ADDED,AVG_LOC_ADDED,LOC_DELETED,MAX_LO
 33,zookeeper-server/src/main/java/org/apache/zookeeper/server/LogFormatter.java,117,3,3,3.0,0,0,0.0,3,3,3.0,0,1,1,False
 33,zookeeper-server/src/main/java/org/apache/zookeeper/server/NIOServerCnxn.java,801,3,2,1.5,1,1,0.5,2,2,1.0,0,2,2,False
 33,zookeeper-server/src/main/java/org/apache/zookeeper/server/NIOServerCnxnFactory.java,980,2,1,1.0,1,1,0.5,1,1,0.5,0,2,2,False
-33,zookeeper-server/src/main/java/org/apache/zookeeper/server/NettyServerCnxn.java,654,6,4,2.0,1,1,0.3333333333333333,5,4,1.6666666666666667,0,3,3,True
+33,zookeeper-server/src/main/java/org/apache/zookeeper/server/NettyServerCnxn.java,654,6,4,2.0,1,1,0.3333333333333333,5,4,1.6666666666666667,1,3,3,True
 33,zookeeper-server/src/main/java/org/apache/zookeeper/server/NettyServerCnxnFactory.java,592,1,1,1.0,1,1,1.0,0,0,0.0,0,1,1,True
 33,zookeeper-server/src/main/java/org/apache/zookeeper/server/ObserverBean.java,63,0,0,0.0,0,0,0.0,0,0,0.0,0,0,0,False
 33,zookeeper-server/src/main/java/org/apache/zookeeper/server/PrepRequestProcessor.java,1027,48,12,6.857142857142857,35,10,5.0,49,9,7.0,0,7,3,True
