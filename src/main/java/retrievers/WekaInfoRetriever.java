@@ -188,15 +188,23 @@ public class WekaInfoRetriever {
         int trueClassifierIndex = testing.classAttribute().indexOfValue("True");
 
         if(trueClassifierIndex != -1){
+            System.out.println("Classifier: " + classifierName.name() + ", feature selection: " + featureSelection + ", sampling: " + sampling);
             for (int i = 0; i < testing.numInstances(); i++) {
                 int sizeValue = (int) testing.instance(i).value(sizeIndex);
                 int valueIndex = (int) testing.instance(i).value(isBuggyIndex);
-                String buggy =  testing.attribute(isBuggyIndex).value(valueIndex);
+                String buggyness =  testing.attribute(isBuggyIndex).value(valueIndex);
+                String buggy;
+                if(buggyness.equals("True")){
+                    buggy = "YES";
+                }else{
+                    buggy = "NO";
+                }
                 double[] distribution = classifier.distributionForInstance(testing.instance(i));
+                System.out.println("Distribution:" + distribution[trueClassifierIndex]);
+                System.out.println("Buggy:" + buggy);
                 AcumeUtils acumeUtils = new AcumeUtils(i, sizeValue, distribution[trueClassifierIndex], buggy);
                 acumeUtilsList.add(acumeUtils);
             }
-
         }
         writeCsvForAcume(projName, classifierName, featureSelection, sampling, costSensitive, index, acumeUtilsList);
 
