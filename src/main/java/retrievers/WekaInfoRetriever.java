@@ -200,7 +200,7 @@ public class WekaInfoRetriever {
             }
         }
         writeCsvForAcume(projName, classifierName, featureSelection, sampling, costSensitive, index, acumeUtilsList);
-        
+
         return classifierEvaluation;
     }
 
