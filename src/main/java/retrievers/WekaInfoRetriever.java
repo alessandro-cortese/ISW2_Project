@@ -163,8 +163,6 @@ public class WekaInfoRetriever {
             costSensitiveClassifier.setClassifier(classifier);
 
             classifier = costSensitiveClassifier;
-        } else if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.NONE){
-            
         }
 
         classifier.buildClassifier(training);
