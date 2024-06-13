@@ -1,9 +1,9 @@
 package enums;
 
 public enum ProjectsEnum {
-    ZOOKEEPER,
+    //ZOOKEEPER,
     OPENJPA,
-    //STORM,
+    STORM,
     TAJO,
     AVRO,
     SYNCOPE

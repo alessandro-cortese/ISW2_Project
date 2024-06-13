@@ -22,11 +22,26 @@ public class FileCreator {
 
     public static void writeCsvForAcume(String projectName, ClassifierEnum classifierEnum, FeatureSelectionEnum featureSelectionEnum, SamplingEnum samplingEnum, CostSensitiveEnum costSensitiveEnum, Integer index, List<AcumeUtils> acumeUtils) throws IOException, ImpossibleDirectoryCreationException {
 
-        String fileName = projectName.toUpperCase() + "_" + classifierEnum.toString().toUpperCase() + "_" + featureSelectionEnum.toString().toUpperCase() + "_" + samplingEnum.toString().toUpperCase() + "_" + costSensitiveEnum.toString().toUpperCase() + "_" + index.toString();
+        String featureSelectionString;
+        String sensitiveLearningString;
+
+        if(featureSelectionEnum == FeatureSelectionEnum.BestFirstBackword){
+            featureSelectionString = "true";
+        }else{
+            featureSelectionString = "false";
+        }
+
+
+        if(costSensitiveEnum == CostSensitiveEnum.SensitiveLearning){
+            sensitiveLearningString = "true";
+        }else{
+            sensitiveLearningString = "false";
+        }
+
+        String fileName = projectName.toUpperCase() + classifierEnum.toString() + featureSelectionString + samplingEnum.toString() + sensitiveLearningString  + index.toString();
         File file = createANewFileAcume(projectName, fileName, FilenamesEnum.ACUME, index);
 
         writeOnCsvAcume(file, acumeUtils);
-
     }
 
     private static @NotNull File createANewFileAcume(String projectName, String fileName, FilenamesEnum fileEnum, int fileIndex) throws IOException, ImpossibleDirectoryCreationException {
@@ -166,6 +181,64 @@ public class FileCreator {
         }
     }
 
+    public static void writeEvaluationDataOnCsvForBoxPlot(String projName, List<ClassifierEvaluation> classifierEvaluationList) throws IOException, ImpossibleDirectoryCreationException{
+
+        File file = createANewFile(projName + "_evaluating_for_box_plot", FilenamesEnum.EVALUATING, 0, ".csv");
+
+        try(FileWriter fw = new FileWriter(file)) {
+
+            fw.write("TrainingRelease," +
+                    "ClassifierName," +
+                    "FilterName," +
+                    "SamplerName," +
+                    "SensitiveLearning," +
+                    "Precision," +
+                    "Recall," +
+                    "ROC_AUC," +
+                    "Kappa," +
+                    "TruePositive," +
+                    "FalsePositive," +
+                    "TrueNegative," +
+                    "FalseNegative\n");
+
+            for(ClassifierEvaluation classifierEvaluation: classifierEvaluationList) {
+
+                fw.write(classifierEvaluation.getWalkForwardIterationIndex() + ",");        //#TRAINING_RELEASES
+                fw.write(classifierEvaluation.getClassifier() + ",");                       //CLASSIFIER
+
+                if(classifierEvaluation.getFeatureSelection().toString().equals("BestFirstBackword")){
+                    fw.write("false,");
+                }else {
+                    fw.write("true,");
+                }
+
+                fw.write(classifierEvaluation.getSampling().toString() + ",");              //BALANCING
+
+                if(classifierEvaluation.getCostSensitiveType().toString().equals("SensitiveLearning")) {
+                    fw.write("true,");
+                }else {
+                    fw.write("false,");
+                }
+
+
+                writeData(fw, classifierEvaluation);
+            }
+        }
+
+
+    }
+
+    private static void writeData(FileWriter fw, ClassifierEvaluation classifierEvaluation) throws IOException {
+        fw.write(classifierEvaluation.getPrecision() + ",");                        //PRECISION
+        fw.write(classifierEvaluation.getRecall() + ",");                           //RECALL
+        fw.write(classifierEvaluation.getAuc() + ",");                              //AUC
+        fw.write(classifierEvaluation.getKappa() + ",");                            //KAPPA
+        fw.write(classifierEvaluation.getTp() + ",");                               //TRUE_POSITIVE
+        fw.write(classifierEvaluation.getFp() + ",");                               //FALSE_POSITIVE
+        fw.write(classifierEvaluation.getTn() + ",");                               //TRUE_NEGATIVE
+        fw.write(classifierEvaluation.getFn() + "\n");                              //FALSE_NEGATIVE
+    }
+
     public static void writeEvaluationDataOnCsv(String projName, List<ClassifierEvaluation> classifierEvaluationList) throws IOException, ImpossibleDirectoryCreationException {
 
         File file = createANewFile(projName, FilenamesEnum.EVALUATING, 0, ".csv");
@@ -197,14 +270,7 @@ public class FileCreator {
                 fw.write(classifierEvaluation.getFeatureSelection().toString() + ",");      //FEATURE_SELECTION
                 fw.write(classifierEvaluation.getSampling().toString() + ",");              //BALANCING
                 fw.write(classifierEvaluation.getCostSensitiveType().toString() + ",");     //COST_SENSITIVE
-                fw.write(classifierEvaluation.getPrecision() + ",");                        //PRECISION
-                fw.write(classifierEvaluation.getRecall() + ",");                           //RECALL
-                fw.write(classifierEvaluation.getAuc() + ",");                              //AUC
-                fw.write(classifierEvaluation.getKappa() + ",");                            //KAPPA
-                fw.write(classifierEvaluation.getTp() + ",");                               //TRUE_POSITIVE
-                fw.write(classifierEvaluation.getFp() + ",");                               //FALSE_POSITIVE
-                fw.write(classifierEvaluation.getTn() + ",");                               //TRUE_NEGATIVE
-                fw.write(classifierEvaluation.getFn() + "\n");                              //FALSE_NEGATIVE
+                writeData(fw, classifierEvaluation);
             }
         }
     }

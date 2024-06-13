@@ -63,6 +63,7 @@ public class RunningExecution {
         retrievers.WekaInfoRetriever wekaInfoRetriever = new retrievers.WekaInfoRetriever(projName, allTheReleaseInfo.size()/2);
         List<ClassifierEvaluation> classifierEvaluationList = wekaInfoRetriever.retrieveClassifiersEvaluation(projName);
         FileCreator.writeEvaluationDataOnCsv(projName, classifierEvaluationList);
+        FileCreator.writeEvaluationDataOnCsvForBoxPlot(projName, classifierEvaluationList);
         logger.info("Finished Weka evaluation.");
 
     }

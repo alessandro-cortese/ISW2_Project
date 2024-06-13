@@ -98,14 +98,12 @@ public class WekaInfoRetriever {
         Evaluation eval = new Evaluation(testing);
 
         //FEATURE SELECTION
-        if (featureSelection == FeatureSelectionEnum.BEST_FIRST_FORWARD) {//FEATURE SELECTION WITH BEST FIRST FORWARD TECHNIQUE
-            AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 1 -N 5");
-
-            classifier = getFilteredClassifier(classifier, filter);
-        } else if (featureSelection == FeatureSelectionEnum.BEST_FIRST_BACKWARD) {//FEATURE SELECTION WITH BEST FIRST BACKWARD TECHNIQUE
+        if (featureSelection == FeatureSelectionEnum.BestFirstBackword) {//FEATURE SELECTION WITH BEST FIRST BACKWARD TECHNIQUE
             AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 0 -N 5");
 
             classifier = getFilteredClassifier(classifier, filter);
+        } else if( featureSelection == FeatureSelectionEnum.NONE){
+            //
         }
 
         int[] nominalCounts = training.attributeStats(training.numAttributes() - 1).nominalCounts;
@@ -114,7 +112,7 @@ public class WekaInfoRetriever {
 
         //SAMPLING
         switch (sampling) {
-            case UNDERSAMPLING -> {
+            case Undersampling -> {
                 //VALIDATION WITH UNDER SAMPLING
                 SpreadSubsample spreadSubsample = new SpreadSubsample();
                 spreadSubsample.setInputFormat(training);
@@ -122,7 +120,7 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, spreadSubsample);
             }
-            case OVERSAMPLING -> {
+            case Oversampling -> {
                 //VALIDATION WITH OVERSAMPLING
                 double proportionOfMajorityValue = (double) numberOfFalse / (numberOfFalse + numberOfTrue);
 
@@ -133,7 +131,7 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, resample);
             }
-            case SMOTE -> {
+            case Smote -> {
                 double percentSMOTE;    //Percentage of oversampling (e.g. a percentage of 100% will cause a doubling of the instances of the minority class)
                 if(numberOfTrue==0 || numberOfTrue > numberOfFalse){
                     percentSMOTE = 0;
@@ -150,10 +148,13 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, smote);
             }
+            case NONE -> {
+                //
+            }
         }
 
         //COST SENSITIVE
-        if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.SENSITIVE_LEARNING) {
+        if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.SensitiveLearning) {
             //COST SENSITIVE WITH SENSITIVE LEARNING
             CostSensitiveClassifier costSensitiveClassifier = new CostSensitiveClassifier();
             costSensitiveClassifier.setMinimizeExpectedCost(true);
@@ -162,6 +163,8 @@ public class WekaInfoRetriever {
             costSensitiveClassifier.setClassifier(classifier);
 
             classifier = costSensitiveClassifier;
+        } else if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.NONE){
+            CostSensitiveClassifier costSensitiveClassifier = new CostSensitiveClassifier();
         }
 
         classifier.buildClassifier(training);
@@ -239,10 +242,10 @@ public class WekaInfoRetriever {
             case IBK -> {
                 return new IBk();
             }
-            case NAIVE_BAYES -> {
+            case NaiveBayes -> {
                 return new NaiveBayes();
             }
-            case RANDOM_FOREST -> {
+            case RandomForest -> {
                 return new RandomForest();
             }
         }
