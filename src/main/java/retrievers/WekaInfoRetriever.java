@@ -98,7 +98,7 @@ public class WekaInfoRetriever {
         Evaluation eval = new Evaluation(testing);
 
         //FEATURE SELECTION
-        if (featureSelection == FeatureSelectionEnum.BestFirstBackword) {//FEATURE SELECTION WITH BEST FIRST BACKWARD TECHNIQUE
+        if (featureSelection == FeatureSelectionEnum.BEST_FIRST_BACKWORD) {//FEATURE SELECTION WITH BEST FIRST BACKWARD TECHNIQUE
             AttributeSelection filter = getBestFirstAttributeSelection(training, "-D 0 -N 5");
 
             classifier = getFilteredClassifier(classifier, filter);
@@ -112,7 +112,7 @@ public class WekaInfoRetriever {
 
         //SAMPLING
         switch (sampling) {
-            case Undersampling -> {
+            case UNDERSAMPLING -> {
                 //VALIDATION WITH UNDER SAMPLING
                 SpreadSubsample spreadSubsample = new SpreadSubsample();
                 spreadSubsample.setInputFormat(training);
@@ -120,7 +120,7 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, spreadSubsample);
             }
-            case Oversampling -> {
+            case OVERSAMPLING -> {
                 //VALIDATION WITH OVERSAMPLING
                 double proportionOfMajorityValue = (double) numberOfFalse / (numberOfFalse + numberOfTrue);
 
@@ -131,7 +131,7 @@ public class WekaInfoRetriever {
 
                 classifier = getFilteredClassifier(classifier, resample);
             }
-            case Smote -> {
+            case SMOTE -> {
                 double percentSMOTE;    //Percentage of oversampling (e.g. a percentage of 100% will cause a doubling of the instances of the minority class)
                 if(numberOfTrue==0 || numberOfTrue > numberOfFalse){
                     percentSMOTE = 0;
@@ -154,7 +154,7 @@ public class WekaInfoRetriever {
         }
 
         //COST SENSITIVE
-        if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.SensitiveLearning) {
+        if (Objects.requireNonNull(costSensitive) == CostSensitiveEnum.SENSITIVE_LEARNING) {
             //COST SENSITIVE WITH SENSITIVE LEARNING
             CostSensitiveClassifier costSensitiveClassifier = new CostSensitiveClassifier();
             costSensitiveClassifier.setMinimizeExpectedCost(true);
@@ -242,10 +242,10 @@ public class WekaInfoRetriever {
             case IBK -> {
                 return new IBk();
             }
-            case NaiveBayes -> {
+            case NAIVE_BAYES -> {
                 return new NaiveBayes();
             }
-            case RandomForest -> {
+            case RANDOM_FOREST -> {
                 return new RandomForest();
             }
         }

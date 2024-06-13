@@ -25,14 +25,14 @@ public class FileCreator {
         String featureSelectionString;
         String sensitiveLearningString;
 
-        if(featureSelectionEnum == FeatureSelectionEnum.BestFirstBackword){
+        if(featureSelectionEnum == FeatureSelectionEnum.BEST_FIRST_BACKWORD){
             featureSelectionString = "true";
         }else{
             featureSelectionString = "false";
         }
 
 
-        if(costSensitiveEnum == CostSensitiveEnum.SensitiveLearning){
+        if(costSensitiveEnum == CostSensitiveEnum.SENSITIVE_LEARNING){
             sensitiveLearningString = "true";
         }else{
             sensitiveLearningString = "false";

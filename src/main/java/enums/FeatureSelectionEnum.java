@@ -1,6 +1,6 @@
 package enums;
 
 public enum FeatureSelectionEnum {
-    BestFirstBackword,
+    BEST_FIRST_BACKWORD,
     NONE
 }

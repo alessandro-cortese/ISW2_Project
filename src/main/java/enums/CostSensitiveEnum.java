@@ -1,6 +1,6 @@
 package enums;
 
 public enum CostSensitiveEnum {
-    SensitiveLearning,
+    SENSITIVE_LEARNING,
     NONE
 }

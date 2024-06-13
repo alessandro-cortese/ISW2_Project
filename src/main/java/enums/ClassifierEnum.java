@@ -1,7 +1,7 @@
 package enums;
 
 public enum ClassifierEnum {
-    RandomForest,
-    NaiveBayes,
+    RANDOM_FOREST,
+    NAIVE_BAYES,
     IBK
 }
