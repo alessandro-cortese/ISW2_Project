@@ -48,7 +48,6 @@ public class MetricsRetriever {
                     versionRetriever,
                     GitUtils.castToLocalDate(commit.getCommitterIdent().getWhen()),
                     releaseInfoList);
-
             if (releaseInfo != null) {
                 List<JavaClassModifies> classChangedList = commitRetriever.retrieveChanges(commit);
 
